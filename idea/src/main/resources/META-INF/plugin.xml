@@ -17,4 +17,24 @@
 		</ul>
 	]]></change-notes>
 
+
+	<depends>com.intellij.modules.lang</depends>
+
+	<applicationListeners>
+		<listener topic="com.intellij.ide.AppLifecycleListener"
+			class="net.twisterrob.chroma.intellij.shortcuts.ChromaListenerRegistrar" />
+		<listener topic="com.intellij.ide.plugins.DynamicPluginListener"
+			class="net.twisterrob.chroma.intellij.shortcuts.ChromaListenerRegistrar" />
+	</applicationListeners>
+	<extensions defaultExtensionNs="com.intellij">
+		<applicationService serviceImplementation="net.twisterrob.chroma.intellij.shortcuts.ChromaService" />
+	</extensions>
+	<actions>
+		<action class="net.twisterrob.chroma.intellij.shortcuts.ChromaDisplayToggleAction"
+			id="net.twisterrob.chroma.intellij.shortcuts.toggle">
+			<add-to-group group-id="UIToggleActions" anchor="last" />
+			<keyboard-shortcut first-keystroke="alt c" keymap="$default" />
+		</action>
+	</actions>
+
 </idea-plugin>
