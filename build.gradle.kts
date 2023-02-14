@@ -1,14 +1,8 @@
 import net.twisterrob.gradle.doNotNagAbout
 
 plugins {
-	alias(libs.plugins.intellij)
+	alias(libs.plugins.intellij) apply false
 	alias(libs.plugins.kotlin) apply false
-}
-
-intellij {
-	version.set(libs.versions.idea)
-	pluginName.set("Show Shortcuts with Razer Chroma")
-	updateSinceUntilBuild.set(false)
 }
 
 repositories {
