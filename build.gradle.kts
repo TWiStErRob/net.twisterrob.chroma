@@ -5,10 +5,6 @@ plugins {
 	alias(libs.plugins.kotlin) apply false
 }
 
-repositories {
-	mavenCentral()
-}
-
 val gradleVersion: String = GradleVersion.current().version
 
 // TODEL Gradle sync in IDEA 2022.3.1: https://youtrack.jetbrains.com/issue/IDEA-306975
