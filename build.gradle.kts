@@ -1,10 +1,5 @@
 import net.twisterrob.gradle.doNotNagAbout
 
-plugins {
-	alias(libs.plugins.intellij) apply false
-	alias(libs.plugins.kotlin) apply false
-}
-
 val gradleVersion: String = GradleVersion.current().version
 
 // TODEL Gradle sync in IDEA 2022.3.1: https://youtrack.jetbrains.com/issue/IDEA-306975

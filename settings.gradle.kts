@@ -20,3 +20,6 @@ dependencyResolutionManagement {
 	// For now, repositories are in gradle/plugins.
 	//repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
 }
+
+include(":idea")
+include(":razer")
