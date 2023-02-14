@@ -1,25 +1,3 @@
-//@file:RuntimeOptions("-J--illegal-access=deny")
-
-// Based on:
-// main.kts: https://kotlinlang.org/docs/custom-script-deps-tutorial.html
-// HttpClient: https://ktor.io/docs/http-client-engines.html#java
-// Jackson: https://ktor.io/docs/serialization-client.html > Jackson
-// jackson {} config: https://www.baeldung.com/jackson-deserialize-json-unknown-properties
-
-// Implicit dependency: Java 11 (because ktor 2.x is compiled as Class 55)
-// Note: normally these dependencies are listed without a -jvm suffix,
-// but there's no Gradle resolution in play here, so we have to pick a platform manually.
-@file:Repository("https://repo1.maven.org/maven2/")
-@file:DependsOn("io.ktor:ktor-client-java-jvm:2.2.3")
-@file:DependsOn("io.ktor:ktor-client-content-negotiation-jvm:2.2.3")
-@file:DependsOn("io.ktor:ktor-serialization-jackson-jvm:2.2.3")
-@file:DependsOn("io.ktor:ktor-client-logging-jvm:2.2.3")
-
-// Override transitively included jaxb-impl:2.2 to avoid warning when marshalling Kml.
-// > Illegal reflective access by com.sun.xml.bind.v2.runtime.reflect.opt.Injector$1 (jaxb-impl-2.2.jar)
-// > to method java.lang.ClassLoader.defineClass(java.lang.String,byte[],int,int)
-@file:DependsOn("com.sun.xml.bind:jaxb-impl:2.3.8")
-
 import com.fasterxml.jackson.databind.DeserializationFeature
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -49,10 +27,6 @@ import javax.swing.JFrame
 import javax.swing.SwingUtilities
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-
-runBlocking(Dispatchers.Default) {
-	main()
-}
 
 suspend fun main() {
 	ChromaSDK(ChromaSDK.CHROMASDK_1).use { sdk ->
