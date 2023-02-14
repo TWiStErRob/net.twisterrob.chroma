@@ -21,7 +21,7 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
 
   build:
-    name: 1 🔨 Build
+    name: 🔨 Build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [ validate ]
