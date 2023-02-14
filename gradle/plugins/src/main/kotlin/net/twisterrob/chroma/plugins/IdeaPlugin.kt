@@ -17,5 +17,15 @@ class IdeaPlugin : Plugin<Project> {
 			pluginName.set("Show Shortcuts with Razer Chroma")
 			updateSinceUntilBuild.set(false)
 		}
+		// > Task :idea:jarSearchableOptions
+		// [gradle-intellij-plugin :idea idea:idea:jarSearchableOptions] No searchable options found.
+		// If plugin is not supposed to provide custom settings exposed in UI, disable building searchable options to decrease the build time.
+		// See: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin-faq.html#how-to-disable-building-searchable-options
+		target.tasks.named("buildSearchableOptions").configure {
+			enabled = false
+		}
+		target.tasks.named("jarSearchableOptions").configure {
+			enabled = false
+		}
 	}
 }
