@@ -40,13 +40,13 @@ value class ChromaColor(val abgr: Int) {
 			return ChromaColor(a or r or g or b)
 		}
 
-		val BLACK = ChromaColor(0x00_00_00_00)
-		val WHITE = ChromaColor(0x00_ff_ff_ff)
-		val RED = ChromaColor(0x00_00_00_ff)
-		val GREEN = ChromaColor(0x00_00_ff_00)
-		val BLUE = ChromaColor(0x00_ff_00_00)
-		val YELLOW = ChromaColor(0x00_00_ff_ff)
-		val CYAN = ChromaColor(0x00_ff_ff_00)
-		val MAGENTA = ChromaColor(0x00_ff_00_ff)
+		val BLACK = ChromaColor(0x00_00_00)
+		val WHITE = ChromaColor(0xff_ff_ff)
+		val RED = ChromaColor(0x00_00_ff)
+		val GREEN = ChromaColor(0x00_ff_00)
+		val BLUE = ChromaColor(0xff_00_00)
+		val YELLOW = ChromaColor(0x00_ff_ff)
+		val CYAN = ChromaColor(0xff_ff_00)
+		val MAGENTA = ChromaColor(0xff_00_ff)
 	}
 }
