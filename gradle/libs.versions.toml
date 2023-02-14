@@ -5,6 +5,7 @@ java = "11"
 kotlin = "1.8.10"
 
 [libraries]
+kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

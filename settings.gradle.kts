@@ -1,4 +1,5 @@
 pluginManagement {
+	includeBuild("gradle/plugins")
 	resolutionStrategy {
 		eachPlugin {
 			when (requested.id.id) {

@@ -2,11 +2,7 @@ import net.twisterrob.gradle.doNotNagAbout
 
 plugins {
 	alias(libs.plugins.intellij)
-	alias(libs.plugins.kotlin)
-}
-
-kotlin {
-	jvmToolchain(libs.versions.java.get().toInt()) // TODO Kotlin versions
+	alias(libs.plugins.kotlin) apply false
 }
 
 intellij {
@@ -17,11 +13,6 @@ intellij {
 
 repositories {
 	mavenCentral()
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach { 
-	compilerOptions.allWarningsAsErrors.set(true)
-	compilerOptions.verbose.set(true)
 }
 
 val gradleVersion: String = GradleVersion.current().version
