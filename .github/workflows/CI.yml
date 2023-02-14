@@ -1,0 +1,17 @@
+name: CI
+on: push
+jobs:
+
+  build:
+    name: 1 🔨 Build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout ${{ github.ref }} branch in ${{ github.repository }} repository.
+        uses: actions/checkout@v3
+
+      - name: Build project.
+        run: >
+          ./gradlew
+          --stacktrace
+          build
