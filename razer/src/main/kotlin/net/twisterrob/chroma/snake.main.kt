@@ -3,8 +3,8 @@ package net.twisterrob.chroma
 import kotlinx.coroutines.delay
 import net.twisterrob.chroma.razer.ChromaColor
 import net.twisterrob.chroma.razer.ChromaController
+import net.twisterrob.chroma.razer.ChromaEffect
 import net.twisterrob.chroma.razer.RZKEY
-import net.twisterrob.chroma.razer.rest.keyboard.KeyboardRequest
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import javax.swing.JFrame
@@ -62,13 +62,13 @@ suspend fun main() {
 				@Suppress("UNUSED_VALUE") // False positive, `last` is used in next cycle.
 				last = System.currentTimeMillis()
 				print(".")
-				controller.customKey(KeyboardRequest.CustomEffectParams().apply {
+				controller.customKey(ChromaEffect().apply {
 					snake.forEachIndexed { index, part ->
 						val comp = ((index.toDouble() / (snake.size - 1).toDouble()) * 0xdf + 0x20).toInt()
 						val c = (comp shl 16) or (comp shl 8) or (comp shl 0)
-						color[part.first][part.second] = c
+						this[part.first, part.second] = ChromaColor(c)
 					}
-					color[apple.first][apple.second] = 0x0000ff
+					this[apple.first, apple.second] = ChromaColor.RED
 				})
 				val dir = direction ?: return
 				val step = Pair(snake.last().first + dir.first, snake.last().second + dir.second)

@@ -32,7 +32,7 @@ class ChromaController(
 			)
 		)
 		// For some reason immediately after starting the things don't work, so hack around a bit.
-		delay(2.seconds)
+		delay(3.seconds)
 		client.heartbeat()
 		@Suppress("OPT_IN_USAGE")
 		job = GlobalScope.launch {
@@ -51,7 +51,15 @@ class ChromaController(
 		client.showEffect(KeyboardRequest("CHROMA_STATIC", KeyboardRequest.StaticEffectParams(color.abgr)))
 	}
 
-	suspend fun customKey(params: KeyboardRequest.CustomEffectParams) {
+	suspend fun customKey(colors: ChromaEffect = ChromaEffect(), keys: ChromaEffect = ChromaEffect()) {
+		val params = KeyboardRequest.CustomEffectParams().apply {
+			colors.highlights.forEach { (loc, color) ->
+				this.color[loc.first][loc.second] = color.abgr
+			}
+			keys.highlights.forEach { (loc, color) ->
+				this.key[loc.first][loc.second] = color.abgr or 0x01_00_00_00
+			}
+		}
 		client.showEffect(KeyboardRequest("CHROMA_CUSTOM_KEY", params))
 	}
 
