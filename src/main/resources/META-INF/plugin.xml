@@ -1,0 +1,20 @@
+<idea-plugin>
+	<id>net.twisterrob.chroma.intellij.shortcuts</id>
+	<name>Show Shortcuts with Razer Chroma</name>
+	<vendor>Robert Papp (TWiStErRob)</vendor>
+	<idea-version since-build="221.0" />
+
+	<description><![CDATA[
+		Plugin that captures key presses and shows available shortcuts on a Razer Chroma compatible keyboard.
+	]]></description>
+
+	<change-notes><![CDATA[
+		<p>0.1 Initial Release</p>
+		<ul>
+			<li>Ability to capture modifiers.</li>
+			<li>Highlight shortcuts that have modifiers as part of them.</li>
+			<li>Configurable colors.</li>
+		</ul>
+	]]></change-notes>
+
+</idea-plugin>
