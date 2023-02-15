@@ -12,34 +12,41 @@ import com.intellij.openapi.editor.ex.EditorEventMulticasterEx
 import com.intellij.openapi.editor.ex.FocusChangeListener
 import com.intellij.util.xmlb.XmlSerializerUtil
 
-val LOG = logger<ChromaService>()
+private val LOG = logger<ChromaService>()
 
 @State(name = "ChromaShortcuts", storages = [Storage("chroma-shortcuts.xml")])
 class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
+
+	init {
+		LOG.debug("init(${this})", Throwable("STACK TRACE"))
+	}
 
 	private val configuration = ChromaSettings()
 
 	override fun getState(): ChromaSettings = configuration
 
 	override fun loadState(state: ChromaSettings) {
+		LOG.debug("loadState($state)")
 		XmlSerializerUtil.copyBean(state, configuration)
 	}
 
 	fun isEnabled(): Boolean = configuration.isEnabled
 
 	fun setEnabled(state: Boolean) {
+		LOG.debug("setEnabled($state)")
 		configuration.isEnabled = state
 	}
 
 	private val focusListener = object : FocusChangeListener {
 		override fun focusGained(editor: Editor) {
-			LOG.info("Focus gained: ${editor.project?.name} - ${editor.headerComponent?.name}")
+			LOG.debug("Focus gained: ${editor.project?.name} - ${editor.headerComponent?.name}")
 		}
 
 		override fun focusLost(editor: Editor) {
-			LOG.info("Focus lost: ${editor.project?.name} - ${editor.headerComponent?.name}")
+			LOG.debug("Focus lost: ${editor.project?.name} - ${editor.headerComponent?.name}")
 		}
 	}
+
 	fun ensureStarted() {
 		//val multicaster = ToolWindowManager.getInstance(project)
 		val multicaster = EditorFactory.getInstance().eventMulticaster
@@ -52,7 +59,7 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 	}
 
 	override fun dispose() {
-		TODO("not implemented")
+		LOG.debug("${this} dispose()")
 	}
 
 	companion object {

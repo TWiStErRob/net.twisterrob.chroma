@@ -6,6 +6,8 @@ import net.twisterrob.chroma.plugins.internal.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
+import org.jetbrains.intellij.tasks.RunIdeTask
+import org.jetbrains.kotlin.gradle.utils.named
 
 class IdeaPlugin : Plugin<Project> {
 
@@ -26,6 +28,12 @@ class IdeaPlugin : Plugin<Project> {
 		}
 		target.tasks.named("jarSearchableOptions").configure {
 			enabled = false
+		}
+		target.tasks.named<RunIdeTask>("runIde").configure {
+			systemProperty(
+				"java.util.logging.config.file",
+				target.file("src/main/runtime/logging.properties")
+			)
 		}
 	}
 }
