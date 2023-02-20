@@ -10,10 +10,12 @@ import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.Shortcut
 import com.intellij.openapi.actionSystem.ex.AnActionListener
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManagerListener
 
 private val LOG = logger<ChromaListenerRegistrar>()
 
-class ChromaListenerRegistrar : AppLifecycleListener, DynamicPluginListener, AnActionListener {
+class ChromaListenerRegistrar : AppLifecycleListener, DynamicPluginListener, AnActionListener, ProjectManagerListener {
 
 	override fun appFrameCreated(commandLineArgs: MutableList<String>) {
 		LOG.debug("appFrameCreated(${commandLineArgs.joinToString()})")
@@ -31,12 +33,22 @@ class ChromaListenerRegistrar : AppLifecycleListener, DynamicPluginListener, AnA
 //			ChromaService.getInstance().ensureStarted()
 		}
 	}
-	
+
 	override fun pluginUnloaded(pluginDescriptor: IdeaPluginDescriptor, isUpdate: Boolean) {
 		LOG.debug("pluginUnloaded(${pluginDescriptor.pluginId}, ${isUpdate})")
 		if (pluginDescriptor.pluginId.idString == "net.twisterrob.chroma.intellij.shortcuts") {
 //			ChromaService.getInstance().ensureStopped()
 		}
+	}
+
+	override fun projectOpened(project: Project) {
+		LOG.debug("projectOpened(${project.name})")
+		ChromaService.getInstance().projectOpened(project)
+	}
+
+	override fun projectFrameClosed() {
+		LOG.debug("projectFrameClosed()")
+		super.projectFrameClosed()
 	}
 
 	override fun beforeActionPerformed(action: AnAction, event: AnActionEvent) {

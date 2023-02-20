@@ -27,6 +27,8 @@
 			class="net.twisterrob.chroma.intellij.shortcuts.ChromaListenerRegistrar" />
 		<listener topic="com.intellij.openapi.actionSystem.ex.AnActionListener"
 			class="net.twisterrob.chroma.intellij.shortcuts.ChromaListenerRegistrar" />
+		<listener topic="com.intellij.openapi.project.ProjectManagerListener"
+			class="net.twisterrob.chroma.intellij.shortcuts.ChromaListenerRegistrar" />
 	</applicationListeners>
 	<extensions defaultExtensionNs="com.intellij">
 		<applicationService serviceImplementation="net.twisterrob.chroma.intellij.shortcuts.ChromaService" />
