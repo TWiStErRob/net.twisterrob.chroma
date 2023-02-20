@@ -19,36 +19,34 @@ class ChromaListenerRegistrar : AppLifecycleListener, DynamicPluginListener, AnA
 
 	override fun appFrameCreated(commandLineArgs: MutableList<String>) {
 		LOG.debug("appFrameCreated(${commandLineArgs.joinToString()})")
-//		ChromaService.getInstance().ensureStarted()
+		ChromaService.getInstance().ensureStarted()
 	}
 
 	override fun appWillBeClosed(isRestart: Boolean) {
 		LOG.debug("appWillBeClosed(${isRestart})")
-//		ChromaService.getInstance().ensureStopped()
+		ChromaService.getInstance().ensureStopped()
 	}
 
 	override fun pluginLoaded(pluginDescriptor: IdeaPluginDescriptor) {
 		LOG.debug("pluginLoaded(${pluginDescriptor.pluginId})")
 		if (pluginDescriptor.pluginId.idString == "net.twisterrob.chroma.intellij.shortcuts") {
-//			ChromaService.getInstance().ensureStarted()
+			ChromaService.getInstance().ensureStarted()
 		}
 	}
 
 	override fun pluginUnloaded(pluginDescriptor: IdeaPluginDescriptor, isUpdate: Boolean) {
 		LOG.debug("pluginUnloaded(${pluginDescriptor.pluginId}, ${isUpdate})")
 		if (pluginDescriptor.pluginId.idString == "net.twisterrob.chroma.intellij.shortcuts") {
-//			ChromaService.getInstance().ensureStopped()
+			ChromaService.getInstance().ensureStopped()
 		}
 	}
 
 	override fun projectOpened(project: Project) {
 		LOG.debug("projectOpened(${project.name})")
-		ChromaService.getInstance().projectOpened(project)
 	}
 
 	override fun projectFrameClosed() {
 		LOG.debug("projectFrameClosed()")
-		super.projectFrameClosed()
 	}
 
 	override fun beforeActionPerformed(action: AnAction, event: AnActionEvent) {
