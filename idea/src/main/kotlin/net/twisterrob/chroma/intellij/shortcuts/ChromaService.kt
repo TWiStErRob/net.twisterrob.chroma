@@ -35,12 +35,7 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 		XmlSerializerUtil.copyBean(state, configuration)
 	}
 
-	fun isEnabled(): Boolean = configuration.isEnabled
-
-	fun setEnabled(state: Boolean) {
-		LOG.debug("setEnabled($state)")
-		configuration.isEnabled = state
-	}
+	var isEnabled: Boolean by configuration::isEnabled
 
 	private val focusListener = object : FocusChangeListener {
 		override fun focusGained(editor: Editor) {

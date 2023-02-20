@@ -7,9 +7,9 @@ import com.intellij.openapi.project.DumbAware
 class ChromaDisplayToggleAction : ToggleAction("Display Chroma Shortcuts on Keyboard"), DumbAware {
 
 	override fun isSelected(e: AnActionEvent): Boolean =
-		ChromaService.getInstance().isEnabled()
+		ChromaService.getInstance().isEnabled
 
 	override fun setSelected(e: AnActionEvent, state: Boolean) {
-		ChromaService.getInstance().setEnabled(state)
+		ChromaService.getInstance().isEnabled = state
 	}
 }
