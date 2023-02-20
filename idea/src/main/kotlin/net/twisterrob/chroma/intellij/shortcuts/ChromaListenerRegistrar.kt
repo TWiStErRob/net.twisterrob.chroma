@@ -54,7 +54,7 @@ class ChromaListenerRegistrar : AppLifecycleListener, DynamicPluginListener, AnA
 	}
 
 	override fun afterActionPerformed(action: AnAction, event: AnActionEvent, result: AnActionResult) {
-		LOG.debug("afterActionPerformed(${action.javaClass.simpleName}, ${event.presentation.text}, ${result})")
+		LOG.debug("afterActionPerformed(${action.javaClass.simpleName}, ${event.presentation.text}, ${result.displayInfo})")
 	}
 
 	override fun beforeShortcutTriggered(shortcut: Shortcut, actions: MutableList<AnAction>, dataContext: DataContext) {

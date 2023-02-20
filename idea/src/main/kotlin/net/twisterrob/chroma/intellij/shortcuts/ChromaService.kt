@@ -6,8 +6,10 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.keymap.KeymapManager
 import com.intellij.util.xmlb.XmlSerializerUtil
 import java.awt.KeyboardFocusManager
+import java.awt.event.KeyEvent
 
 private val LOG = logger<ChromaService>()
 
@@ -16,13 +18,21 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 
 	private val configuration = ChromaSettings()
 
+	private val messenger = ChromaKeyMessenger()
+
 	@Volatile
 	private var started: Boolean = false
 
 	init {
 		LOG.debug("init(${this})", Throwable("STACK TRACE"))
 		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher { e ->
+			// https://stackoverflow.com/a/4443491/253468
 			LOG.debug("dispatchKeyEvent(${e.displayInfo})")
+			if (isEnabled && started) {
+				dispatchEvent(e)
+			} else {
+				LOG.trace("dispatchKeyEvent ignored (isEnabled=$isEnabled, started=$started)")
+			}
 			false
 		}
 	}
@@ -46,6 +56,11 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 
 	fun ensureStarted() {
 		started = true
+	}
+
+	private fun dispatchEvent(e: KeyEvent) {
+		val keymap = KeymapManager.getInstance().activeKeymap
+		messenger.onKeyEvent(keymap, e)
 	}
 
 	fun ensureStopped() {
