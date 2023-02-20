@@ -59,7 +59,10 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 
 	fun ensureStarted() {
 		if (!started) {
-			runBlocking { controller.start() }
+			runBlocking {
+				controller.start()
+				controller.none()
+			}
 		}
 		started = true
 	}
