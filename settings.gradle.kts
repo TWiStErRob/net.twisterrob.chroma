@@ -1,3 +1,5 @@
+import net.twisterrob.gradle.settings.enableFeaturePreviewQuietly
+
 pluginManagement {
 	includeBuild("gradle/plugins")
 	resolutionStrategy {
@@ -20,6 +22,8 @@ dependencyResolutionManagement {
 	// For now, repositories are in gradle/plugins.
 	//repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
 }
+
+enableFeaturePreviewQuietly("TYPESAFE_PROJECT_ACCESSORS", "Type-safe project accessors is an incubating feature.")
 
 include(":idea")
 include(":razer")

@@ -8,6 +8,8 @@ import com.intellij.openapi.components.Storage
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.keymap.KeymapManager
 import com.intellij.util.xmlb.XmlSerializerUtil
+import kotlinx.coroutines.runBlocking
+import net.twisterrob.chroma.razer.ChromaController
 import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
 
@@ -18,7 +20,8 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 
 	private val configuration = ChromaSettings()
 
-	private val messenger = ChromaKeyMessenger()
+	private val controller = ChromaController()
+	private val messenger = ChromaKeyMessenger(controller)
 
 	@Volatile
 	private var started: Boolean = false
@@ -55,6 +58,9 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 		}
 
 	fun ensureStarted() {
+		if (!started) {
+			runBlocking { controller.start() }
+		}
 		started = true
 	}
 
@@ -65,10 +71,14 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 
 	fun ensureStopped() {
 		started = false
+		if (started) {
+			controller.stop()
+		}
 	}
 
 	override fun dispose() {
 		LOG.debug("${this} dispose()")
+		controller.close()
 	}
 
 	companion object {

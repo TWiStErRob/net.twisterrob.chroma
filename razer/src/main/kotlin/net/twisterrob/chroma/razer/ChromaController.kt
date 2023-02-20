@@ -63,9 +63,14 @@ class ChromaController(
 		client.showEffect(KeyboardRequest("CHROMA_CUSTOM_KEY", params))
 	}
 
+	fun stop() {
+		job?.cancel()
+		job = null
+	}
+
 	override fun close() {
 		println("Bye!")
-		job?.cancel()
+		stop()
 		client.close()
 	}
 }
