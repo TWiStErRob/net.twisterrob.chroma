@@ -7,7 +7,6 @@ import kotlinx.coroutines.launch
 import net.twisterrob.chroma.intellij.shortcuts.classification.ClassifiedShortcuts
 import net.twisterrob.chroma.intellij.shortcuts.classification.ShortcutClassifier
 import net.twisterrob.chroma.intellij.shortcuts.classification.toRZKey
-import net.twisterrob.chroma.intellij.shortcuts.debug.displayInfo
 import net.twisterrob.chroma.razer.ChromaColor
 import net.twisterrob.chroma.razer.ChromaController
 import net.twisterrob.chroma.razer.ChromaEffect
@@ -23,7 +22,7 @@ class ChromaKeyMessenger(
 ) {
 
 	fun onKeyEvent(keymap: Keymap, e: KeyEvent) {
-		LOG.debug("onKeyEvent(${keymap.name}, ${e.paramString()} ${e.displayInfo}")
+		LOG.trace("onKeyEvent(${keymap.name}, ${e.paramString()}")
 		val highlight = e.keyCode.toRZKey(e.keyLocation)
 		val modifiers = e.modifiersEx
 		scope.launch {
