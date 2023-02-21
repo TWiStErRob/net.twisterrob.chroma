@@ -1,3 +1,42 @@
 plugins {
 	id("net.twisterrob.chroma.plugins.idea")
 }
+
+dependencies {
+	implementation(projects.razer) {
+		// java.lang.LinkageError: loader constraint violation: when resolving method 'org.slf4j.ILoggerFactory org.slf4j.impl.StaticLoggerBinder.getLoggerFactory()' the class loader com.intellij.ide.plugins.cl.PluginClassLoader @a9ed7a6 of the current class, org/slf4j/LoggerFactory, and the class loader com.intellij.util.lang.PathClassLoader @2ac1fdc4 for the method's defining class, org/slf4j/impl/StaticLoggerBinder, have different Class objects for the type org/slf4j/ILoggerFactory used in the signature (org.slf4j.LoggerFactory is in unnamed module of loader com.intellij.ide.plugins.cl.PluginClassLoader @a9ed7a6, parent loader 'bootstrap'; org.slf4j.impl.StaticLoggerBinder is in unnamed module of loader com.intellij.util.lang.PathClassLoader @2ac1fdc4)
+		// at org.slf4j.LoggerFactory.getILoggerFactory(LoggerFactory.java:423)
+		// at org.slf4j.LoggerFactory.getLogger(LoggerFactory.java:362)
+		// at io.ktor.util.logging.KtorSimpleLoggerJvmKt.KtorSimpleLogger(KtorSimpleLoggerJvm.kt:10)
+		// at io.ktor.client.plugins.DefaultResponseValidationKt.<clinit>(DefaultResponseValidation.kt:18)
+		// at io.ktor.client.HttpClient.<init>(HttpClient.kt:170)
+		// at io.ktor.client.HttpClient.<init>(HttpClient.kt:84)
+		// at io.ktor.client.HttpClientKt.HttpClient(HttpClient.kt:43)
+		// at io.ktor.client.HttpClientJvmKt.HttpClient(HttpClientJvm.kt:21)
+		// at net.twisterrob.chroma.razer.rest.ChromaRestClient.<init>(ChromaRestClient.kt:39)
+		exclude(group: "org.slf4j", module: "slf4j-api")
+	}
+
+	testImplementation(libs.test.jupiter.api)
+	testImplementation(libs.test.jupiter.params)
+	testRuntimeOnly(libs.test.jupiter.engine)
+}
+
+test {
+	useJUnitPlatform()
+}
+
+runPluginVerifier {
+	ideVersions = [
+			// Android Studio: Giraffe
+			"IC-2022.3.1",
+			// Android Studio: Flamingo
+			"IC-2022.2.1",
+			// Android Studio: Electric Eel
+			"IC-2022.1.1",
+			// Android Studio: Dolphin
+			"IC-2021.3.1",
+	]
+	//noinspection UnnecessaryQualifiedReference TODEL https://github.com/JetBrains/gradle-intellij-plugin/issues/1323
+	failureLevel = EnumSet.allOf(org.jetbrains.intellij.tasks.RunPluginVerifierTask.FailureLevel.class)
+}

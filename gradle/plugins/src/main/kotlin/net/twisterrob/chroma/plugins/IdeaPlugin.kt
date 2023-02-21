@@ -6,6 +6,11 @@ import net.twisterrob.chroma.plugins.internal.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
+import org.jetbrains.intellij.tasks.BuildSearchableOptionsTask
+import org.jetbrains.intellij.tasks.JarSearchableOptionsTask
+import org.jetbrains.intellij.tasks.PatchPluginXmlTask
+import org.jetbrains.intellij.tasks.RunIdeTask
+import org.jetbrains.kotlin.gradle.utils.named
 
 class IdeaPlugin : Plugin<Project> {
 
@@ -17,15 +22,24 @@ class IdeaPlugin : Plugin<Project> {
 			pluginName.set("Show Shortcuts with Razer Chroma")
 			updateSinceUntilBuild.set(false)
 		}
+		target.tasks.named<PatchPluginXmlTask>("patchPluginXml").configure {
+			version.set(target.intellij.version)
+		}
 		// > Task :idea:jarSearchableOptions
 		// [gradle-intellij-plugin :idea idea:idea:jarSearchableOptions] No searchable options found.
 		// If plugin is not supposed to provide custom settings exposed in UI, disable building searchable options to decrease the build time.
 		// See: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin-faq.html#how-to-disable-building-searchable-options
-		target.tasks.named("buildSearchableOptions").configure {
+		target.tasks.named<BuildSearchableOptionsTask>("buildSearchableOptions").configure {
 			enabled = false
 		}
-		target.tasks.named("jarSearchableOptions").configure {
+		target.tasks.named<JarSearchableOptionsTask>("jarSearchableOptions").configure {
 			enabled = false
+		}
+		target.tasks.named<RunIdeTask>("runIde").configure {
+			systemProperty(
+				"java.util.logging.config.file",
+				target.file("src/main/runtime/logging.properties")
+			)
 		}
 	}
 }

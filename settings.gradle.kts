@@ -1,3 +1,8 @@
+import net.twisterrob.gradle.settings.enableFeaturePreviewQuietly
+
+// TODEL https://github.com/gradle/gradle/issues/18971
+rootProject.name = "net-twisterrob-chroma"
+
 pluginManagement {
 	includeBuild("gradle/plugins")
 	resolutionStrategy {
@@ -20,6 +25,8 @@ dependencyResolutionManagement {
 	// For now, repositories are in gradle/plugins.
 	//repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
 }
+
+enableFeaturePreviewQuietly("TYPESAFE_PROJECT_ACCESSORS", "Type-safe project accessors is an incubating feature.")
 
 include(":idea")
 include(":razer")

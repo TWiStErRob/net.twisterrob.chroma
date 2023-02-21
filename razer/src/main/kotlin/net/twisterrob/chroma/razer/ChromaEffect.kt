@@ -42,13 +42,18 @@ class ChromaEffect(
 	}
 
 	operator fun set(key: RZKEY, color: ChromaColor) {
+		if (key == RZKEY.RZKEY_INVALID) return
 		colors[Location(key.row, key.column)] = color
 	}
 
 	operator fun get(key: RZKEY): ChromaColor? =
-		colors[Location(key.row, key.column)]
+		if (key == RZKEY.RZKEY_INVALID)
+			null
+		else
+			colors[Location(key.row, key.column)]
 
 	fun delete(key: RZKEY) {
+		if (key == RZKEY.RZKEY_INVALID) return
 		colors.remove(Location(key.row, key.column))
 	}
 

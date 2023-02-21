@@ -13,8 +13,26 @@
 		<ul>
 			<li>Ability to capture modifiers.</li>
 			<li>Highlight shortcuts that have modifiers as part of them.</li>
-			<li>Configurable colors.</li>
+			<li>Only tested with Razer Huntsman V2.</li>
 		</ul>
 	]]></change-notes>
+
+
+	<depends>com.intellij.modules.lang</depends>
+
+	<applicationListeners>
+		<listener topic="com.intellij.ide.AppLifecycleListener"
+			class="net.twisterrob.chroma.intellij.shortcuts.ChromaListenerRegistrar" />
+	</applicationListeners>
+	<extensions defaultExtensionNs="com.intellij">
+		<applicationService serviceImplementation="net.twisterrob.chroma.intellij.shortcuts.ChromaService" />
+	</extensions>
+	<actions>
+		<action class="net.twisterrob.chroma.intellij.shortcuts.ChromaDisplayToggleAction"
+			id="net.twisterrob.chroma.intellij.shortcuts.toggle">
+			<add-to-group group-id="UIToggleActions" anchor="last" />
+			<keyboard-shortcut first-keystroke="alt c" keymap="$default" />
+		</action>
+	</actions>
 
 </idea-plugin>
