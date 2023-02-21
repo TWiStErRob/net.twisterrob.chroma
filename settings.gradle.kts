@@ -1,5 +1,8 @@
 import net.twisterrob.gradle.settings.enableFeaturePreviewQuietly
 
+// TODEL https://github.com/gradle/gradle/issues/18971
+rootProject.name = "net-twisterrob-chroma"
+
 pluginManagement {
 	includeBuild("gradle/plugins")
 	resolutionStrategy {
