@@ -1,16 +1,18 @@
 package net.twisterrob.chroma.razer
 
 import io.ktor.utils.io.core.Closeable
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import net.twisterrob.chroma.razer.rest.ChromaRestClient
 import net.twisterrob.chroma.razer.rest.keyboard.InitRequest
 import net.twisterrob.chroma.razer.rest.keyboard.KeyboardRequest
 import kotlin.time.Duration.Companion.seconds
 
 class ChromaController(
+	private val scope: CoroutineScope = @Suppress("OPT_IN_USAGE") GlobalScope,
 	private val client: ChromaRestClient = ChromaRestClient(),
 ) : Closeable {
 
@@ -34,8 +36,8 @@ class ChromaController(
 		// For some reason immediately after starting the things don't work, so hack around a bit.
 		delay(3.seconds)
 		client.heartbeat()
-		@Suppress("OPT_IN_USAGE")
-		job = GlobalScope.launch {
+		
+		job = scope.async {
 			while (true) {
 				client.heartbeat()
 				delay(1.seconds)

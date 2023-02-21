@@ -8,8 +8,9 @@ import com.intellij.openapi.components.Storage
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.keymap.KeymapManager
 import com.intellij.util.xmlb.XmlSerializerUtil
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import net.twisterrob.chroma.intellij.shortcuts.debug.displayInfo
+import net.twisterrob.chroma.intellij.shortcuts.utils.RestartableScope
 import net.twisterrob.chroma.razer.ChromaController
 import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
@@ -20,15 +21,16 @@ private val LOG = logger<ChromaService>()
 class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 
 	private val configuration = ChromaSettings()
-
-	private val controller = ChromaController()
-	private val messenger = ChromaKeyMessenger(controller)
+	private val scope = RestartableScope()
+	private val controller = ChromaController(scope)
+	private val messenger = ChromaKeyMessenger(scope, controller)
 
 	@Volatile
 	private var started: Boolean = false
 
 	init {
 		LOG.debug("init(${this})", Throwable("STACK TRACE"))
+		// Note: there's no remove, so this will leak ChromaService if the plugin is unloaded.
 		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher { e ->
 			// https://stackoverflow.com/a/4443491/253468
 			LOG.debug("dispatchKeyEvent(${e.displayInfo})")
@@ -60,7 +62,8 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 
 	fun ensureStarted() {
 		if (!started) {
-			runBlocking {
+			scope.start()
+			scope.launch {
 				controller.start()
 				controller.none()
 			}
@@ -77,12 +80,15 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 		started = false
 		if (started) {
 			controller.stop()
+			scope.stop()
 		}
 	}
 
 	override fun dispose() {
 		LOG.debug("${this} dispose()")
+		started = false
 		controller.close()
+		scope.dispose()
 	}
 
 	companion object {
