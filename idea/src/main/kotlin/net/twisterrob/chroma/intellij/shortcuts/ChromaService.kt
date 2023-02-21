@@ -39,8 +39,17 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 		XmlSerializerUtil.copyBean(state, configuration)
 	}
 
-	var isEnabled: Boolean by configuration::isEnabled
-	
+	var isEnabled: Boolean
+		get() = configuration.isEnabled
+		set(value) {
+			configuration.isEnabled = value
+			if (value) {
+				ensureStarted()
+			} else {
+				ensureStopped()
+			}
+		}
+
 	fun ensureStarted() {
 		if (!isEnabled) return
 		if (!started) {
@@ -64,6 +73,9 @@ class ChromaService : PersistentStateComponent<ChromaSettings>, Disposable {
 
 	fun ensureStopped() {
 		if (started) {
+			scope.launch {
+				controller.none()
+			}
 			controller.stop()
 			scope.stop()
 		}
