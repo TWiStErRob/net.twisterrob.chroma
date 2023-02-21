@@ -9,6 +9,7 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.keymap.KeymapManager
 import com.intellij.util.xmlb.XmlSerializerUtil
 import kotlinx.coroutines.runBlocking
+import net.twisterrob.chroma.intellij.shortcuts.debug.displayInfo
 import net.twisterrob.chroma.razer.ChromaController
 import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent

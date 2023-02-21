@@ -12,6 +12,7 @@ import com.intellij.openapi.actionSystem.ex.AnActionListener
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
+import net.twisterrob.chroma.intellij.shortcuts.debug.displayInfo
 
 private val LOG = logger<ChromaListenerRegistrar>()
 

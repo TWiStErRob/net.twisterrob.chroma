@@ -1,4 +1,4 @@
-package net.twisterrob.chroma.intellij.shortcuts
+package net.twisterrob.chroma.intellij.shortcuts.classification
 
 import com.intellij.openapi.actionSystem.KeyboardShortcut
 import org.junit.jupiter.api.Assertions.assertEquals

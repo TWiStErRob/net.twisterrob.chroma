@@ -1,4 +1,4 @@
-package net.twisterrob.chroma.intellij.shortcuts
+package net.twisterrob.chroma.intellij.shortcuts.debug
 
 import com.intellij.openapi.actionSystem.AnActionResult
 import java.awt.event.KeyEvent
