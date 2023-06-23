@@ -4,7 +4,7 @@ intellij = "1.13.0"
 java = "11"
 kotlin = "1.8.10"
 ktor = "2.2.3"
-junit-jupiter = "5.8.1"
+junit-jupiter = "5.8.2"
 
 [libraries]
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
