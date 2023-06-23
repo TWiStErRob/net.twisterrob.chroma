@@ -10,6 +10,7 @@ pluginManagement {
 
 plugins {
 	id("net.twisterrob.gradle.plugin.settings") version "0.15.1"
+	id("org.gradle.toolchains.foojay-resolver-convention") version("0.5.0")
 }
 
 dependencyResolutionManagement {
