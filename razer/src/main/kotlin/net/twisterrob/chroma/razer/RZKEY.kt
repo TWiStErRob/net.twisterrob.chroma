@@ -1,5 +1,6 @@
 package net.twisterrob.chroma.razer
 
+@Suppress("MagicNumber")
 enum class RZKEY(private val value: Int) {
 	RZKEY_ESC(0x0001),                 // Esc (VK_ESCAPE)
 	RZKEY_F1(0x0003),                  // F1 (VK_F1)
