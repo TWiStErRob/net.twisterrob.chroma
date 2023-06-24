@@ -45,3 +45,23 @@ doNotNagAbout(
 			"See https://docs.gradle.org/${gradleVersion}/dsl/org.gradle.api.tasks.bundling.AbstractArchiveTask.html#org.gradle.api.tasks.bundling.AbstractArchiveTask:archivePath for more details.",
 	"at org.jetbrains.plugins.gradle.tooling.util.SourceSetCachedFinder.createArtifactsMap"
 )
+
+// TODEL Gradle conventions vs gradle-intellij-plugin 1.14.1: https://github.com/JetBrains/gradle-intellij-plugin/issues/1413
+@Suppress("MaxLineLength")
+doNotNagAbout(
+	"The org.gradle.api.plugins.JavaPluginConvention type has been deprecated. " +
+			"This is scheduled to be removed in Gradle 9.0. " +
+			"Consult the upgrading guide for further information: " +
+			"https://docs.gradle.org/${gradleVersion}/userguide/upgrading_version_8.html#java_convention_deprecation",
+			"at org.jetbrains.intellij.Utils.sourcePluginXmlFiles(utils.kt:65)",
+)
+@Suppress("MaxLineLength")
+doNotNagAbout(
+	"The Project.getConvention() method has been deprecated. This is scheduled to be removed in Gradle 9.0. Consult the upgrading guide for further information: https://docs.gradle.org/${gradleVersion}/userguide/upgrading_version_8.html#deprecated_access_to_conventions",
+	"at org.jetbrains.intellij.Utils.sourcePluginXmlFiles(utils.kt:64)",
+)
+@Suppress("MaxLineLength")
+doNotNagAbout(
+	"The org.gradle.api.plugins.Convention type has been deprecated. This is scheduled to be removed in Gradle 9.0. Consult the upgrading guide for further information: https://docs.gradle.org/${gradleVersion}/userguide/upgrading_version_8.html#deprecated_access_to_conventions",
+	"at org.jetbrains.intellij.Utils.sourcePluginXmlFiles(utils.kt:383)",
+)
