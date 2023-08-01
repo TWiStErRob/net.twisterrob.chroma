@@ -4,7 +4,7 @@ intellij = "1.15.0"
 java = "11"
 # TODEL kotlin.incremental.useClasspathSnapshot in gradle.properties when updating to 1.9.0
 kotlin = "1.9.0"
-ktor = "2.3.2"
+ktor = "2.3.3"
 junit-jupiter = "5.10.0"
 junit-platform = "1.10.0"
 
