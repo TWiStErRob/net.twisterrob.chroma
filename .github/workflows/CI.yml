@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: Checkout ${{ github.ref }} branch in ${{ github.repository }} repository.
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Validate Gradle Wrapper JARs.
         uses: gradle/wrapper-validation-action@v1
@@ -27,7 +27,7 @@ jobs:
     needs: [ validate ]
     steps:
       - name: Checkout ${{ github.ref }} branch in ${{ github.repository }} repository.
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build project.
         run: >
