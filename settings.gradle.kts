@@ -48,7 +48,7 @@ doNotNagAbout(
 
 // TODEL Gradle 8.2 sync in IDEA 2023.1 https://youtrack.jetbrains.com/issue/IDEA-320266.
 @Suppress("MaxLineLength", "StringLiteralDuplication")
-if ((System.getProperty("idea.version") ?: "") < "2023.2") {
+if ((System.getProperty("idea.version") ?: "") < "2023.3") {
 	// There are ton of warnings, ignoring them all by their class names in one suppression.
 	doNotNagAbout(
 		Regex(
@@ -75,6 +75,23 @@ if ((System.getProperty("idea.version") ?: "") < "2023.2") {
 					")" +
 					".*$"
 		)
+	)
+} else {
+	logger.warn("IDEA version changed, please review hack.")
+}
+
+// TODEL Gradle 8.2 sync in IDEA 2023.1 https://youtrack.jetbrains.com/issue/IDEA-320307.
+@Suppress("MaxLineLength", "StringLiteralDuplication")
+if ((System.getProperty("idea.version") ?: "") < "2024.1") {
+	@Suppress("MaxLineLength", "StringLiteralDuplication")
+	doNotNagAbout(
+		"The BuildIdentifier.getName() method has been deprecated. " +
+				"This is scheduled to be removed in Gradle 9.0. " +
+				"Use getBuildPath() to get a unique identifier for the build. " +
+				"Consult the upgrading guide for further information: " +
+				"https://docs.gradle.org/${gradleVersion}/userguide/upgrading_version_8.html#build_identifier_name_and_current_deprecation",
+		// There are 4 stack traces coming to this line, ignore them all at once.
+		"at org.jetbrains.plugins.gradle.tooling.util.resolve.DependencyResolverImpl.resolveDependencies(DependencyResolverImpl.java:266)"
 	)
 } else {
 	logger.warn("IDEA version changed, please review hack.")
