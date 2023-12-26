@@ -51,132 +51,166 @@
 
 	const BLOOM_SCENE = 1;
 
-	const bloomLayer = new THREE.Layers();
-	bloomLayer.set(BLOOM_SCENE);
+	class Main {
+		darkMaterial = new THREE.MeshBasicMaterial({ color: 'black' });
+		materials = {};
+		params = {
+			threshold: 0,
+			strength: 1.1,
+			radius: 0,
+			exposure: 1.1,
+		};
 
-	const params = {
-		threshold: 0,
-		strength: 1.1,
-		radius: 0,
-		exposure: 1.1,
-	};
+		init() {
+			const bloomLayer = new THREE.Layers();
+			bloomLayer.set(BLOOM_SCENE);
+			this.bloomLayer = bloomLayer;
 
-	const darkMaterial = new THREE.MeshBasicMaterial({ color: 'black' });
-	const materials = {};
+			const renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.toneMapping = THREE.ReinhardToneMapping;
+			document.body.appendChild(renderer.domElement);
+			this.renderer = renderer;
 
-	const renderer = new THREE.WebGLRenderer({ antialias: true });
-	renderer.setPixelRatio(window.devicePixelRatio);
-	renderer.setSize(window.innerWidth, window.innerHeight);
-	renderer.toneMapping = THREE.ReinhardToneMapping;
-	document.body.appendChild(renderer.domElement);
+			const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 200);
+			camera.position.set(0, 0, 20);
+			camera.lookAt(0, 0, 0);
+			this.camera = camera;
 
-	const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 200);
-	camera.position.set(0, 0, 20);
-	camera.lookAt(0, 0, 0);
+			const controls = new OrbitControls(camera, renderer.domElement);
+			controls.maxPolarAngle = Math.PI * 0.5;
+			controls.minDistance = 1;
+			controls.maxDistance = 100;
+			controls.addEventListener('change', () => this.render());
 
-	const controls = new OrbitControls(camera, renderer.domElement);
-	controls.maxPolarAngle = Math.PI * 0.5;
-	controls.minDistance = 1;
-	controls.maxDistance = 100;
-	controls.addEventListener('change', render);
+			const scene = new THREE.Scene();
+			setupScene(scene);
+			this.scene = scene;
+			const renderScene = new RenderPass(scene, camera);
 
-	const scene = new THREE.Scene();
-	const renderScene = new RenderPass(scene, camera);
+			const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+			bloomPass.threshold = this.params.threshold;
+			bloomPass.strength = this.params.strength;
+			bloomPass.radius = this.params.radius;
+			this.bloomPass = bloomPass;
 
-	const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-	bloomPass.threshold = params.threshold;
-	bloomPass.strength = params.strength;
-	bloomPass.radius = params.radius;
+			const bloomComposer = new EffectComposer(renderer);
+			bloomComposer.renderToScreen = false;
+			bloomComposer.addPass(renderScene);
+			bloomComposer.addPass(bloomPass);
+			this.bloomComposer = bloomComposer;
 
-	const bloomComposer = new EffectComposer(renderer);
-	bloomComposer.renderToScreen = false;
-	bloomComposer.addPass(renderScene);
-	bloomComposer.addPass(bloomPass);
+			const mixPass = new ShaderPass(
+				new THREE.ShaderMaterial({
+					uniforms: {
+						baseTexture: { value: null },
+						bloomTexture: { value: bloomComposer.renderTarget2.texture },
+					},
+					vertexShader: document.getElementById('vertexshader').textContent,
+					fragmentShader: document.getElementById('fragmentshader').textContent,
+					defines: {},
+				}),
+				'baseTexture',
+			);
+			mixPass.needsSwap = true;
 
-	const mixPass = new ShaderPass(
-		new THREE.ShaderMaterial({
-			uniforms: {
-				baseTexture: { value: null },
-				bloomTexture: { value: bloomComposer.renderTarget2.texture },
-			},
-			vertexShader: document.getElementById('vertexshader').textContent,
-			fragmentShader: document.getElementById('fragmentshader').textContent,
-			defines: {},
-		}),
-		'baseTexture',
-	);
-	mixPass.needsSwap = true;
+			const outputPass = new OutputPass();
 
-	const outputPass = new OutputPass();
+			const finalComposer = new EffectComposer(renderer);
+			finalComposer.addPass(renderScene);
+			finalComposer.addPass(mixPass);
+			finalComposer.addPass(outputPass);
+			this.finalComposer = finalComposer;
 
-	const finalComposer = new EffectComposer(renderer);
-	finalComposer.addPass(renderScene);
-	finalComposer.addPass(mixPass);
-	finalComposer.addPass(outputPass);
+			this.setupGui();
+		}
 
-	setupGui();
-	setupScene();
+		setupGui() {
+			const gui = new GUI();
 
-	function setupGui() {
-		const gui = new GUI();
+			const bloomFolder = gui.addFolder('bloom');
 
-		const bloomFolder = gui.addFolder('bloom');
+			const that = this;
+			bloomFolder.add(this.params, 'threshold', 0.0, 1.0).onChange(function(value) {
+				that.bloomPass.threshold = Number(value);
+				that.render();
+			});
 
-		bloomFolder.add(params, 'threshold', 0.0, 1.0).onChange(function(value) {
-			bloomPass.threshold = Number(value);
-			render();
-		});
+			bloomFolder.add(this.params, 'strength', 0.0, 3).onChange(function(value) {
+				that.bloomPass.strength = Number(value);
+				that.render();
+			});
 
-		bloomFolder.add(params, 'strength', 0.0, 3).onChange(function(value) {
-			bloomPass.strength = Number(value);
-			render();
-		});
+			bloomFolder.add(this.params, 'radius', 0.0, 1.0).step(0.01).onChange(function(value) {
+				that.bloomPass.radius = Number(value);
+				that.render();
+			});
 
-		bloomFolder.add(params, 'radius', 0.0, 1.0).step(0.01).onChange(function(value) {
-			bloomPass.radius = Number(value);
-			render();
-		});
+			const toneMappingFolder = gui.addFolder('tone mapping');
 
-		const toneMappingFolder = gui.addFolder('tone mapping');
+			toneMappingFolder.add(this.params, 'exposure', 0.1, 2).onChange(function(value) {
+				that.renderer.toneMappingExposure = Math.pow(value, 4.0);
+				that.render();
+			});
+		}
 
-		toneMappingFolder.add(params, 'exposure', 0.1, 2).onChange(function(value) {
-			renderer.toneMappingExposure = Math.pow(value, 4.0);
-			render();
-		});
+		onPointerDown(event) {
+			const mouse = new THREE.Vector2(
+				(event.clientX / window.innerWidth) * 2 - 1,
+				-(event.clientY / window.innerHeight) * 2 + 1,
+			);
+
+			const raycaster = new THREE.Raycaster();
+			raycaster.setFromCamera(mouse, this.camera);
+			const intersects = raycaster.intersectObjects(this.scene.children, false);
+			if (intersects.length > 0) {
+				const object = intersects[0].object;
+				object.layers.toggle(BLOOM_SCENE);
+				this.render();
+			}
+		}
+
+		onResize() {
+			const width = window.innerWidth;
+			const height = window.innerHeight;
+
+			this.camera.aspect = width / height;
+			this.camera.updateProjectionMatrix();
+
+			this.renderer.setSize(width, height);
+
+			this.bloomComposer.setSize(width, height);
+			this.finalComposer.setSize(width, height);
+
+			this.render();
+		}
+
+		render() {
+			this.scene.traverse((obj) => this.darkenNonBloomed(obj));
+			this.bloomComposer.render();
+			this.scene.traverse((obj) => this.restoreMaterial(obj));
+
+			// render the entire scene, then render bloom scene on top
+			this.finalComposer.render();
+		}
+
+		darkenNonBloomed(obj) {
+			if (obj.isMesh && this.bloomLayer.test(obj.layers) === false) {
+				this.materials[obj.uuid] = obj.material;
+				obj.material = this.darkMaterial;
+			}
+		}
+
+		restoreMaterial(obj) {
+			if (this.materials[obj.uuid]) {
+				obj.material = this.materials[obj.uuid];
+				delete this.materials[obj.uuid];
+			}
+		}
 	}
 
-	window.addEventListener('pointerdown', function onPointerDown(event) {
-		const mouse = new THREE.Vector2(
-			(event.clientX / window.innerWidth) * 2 - 1,
-			-(event.clientY / window.innerHeight) * 2 + 1,
-		);
-
-		const raycaster = new THREE.Raycaster();
-		raycaster.setFromCamera(mouse, camera);
-		const intersects = raycaster.intersectObjects(scene.children, false);
-		if (intersects.length > 0) {
-			const object = intersects[0].object;
-			object.layers.toggle(BLOOM_SCENE);
-			render();
-		}
-	});
-
-	window.onresize = function onResize() {
-		const width = window.innerWidth;
-		const height = window.innerHeight;
-
-		camera.aspect = width / height;
-		camera.updateProjectionMatrix();
-
-		renderer.setSize(width, height);
-
-		bloomComposer.setSize(width, height);
-		finalComposer.setSize(width, height);
-
-		render();
-	};
-
-	function setupScene() {
+	function setupScene(scene) {
 		scene.traverse(disposeMaterial);
 		scene.children.length = 0;
 
@@ -199,7 +233,6 @@
 				sphere.layers.enable(BLOOM_SCENE);
 			}
 		}
-		render();
 	}
 
 	function disposeMaterial(obj) {
@@ -208,28 +241,11 @@
 		}
 	}
 
-	function render() {
-		scene.traverse(darkenNonBloomed);
-		bloomComposer.render();
-		scene.traverse(restoreMaterial);
-
-		// render the entire scene, then render bloom scene on top
-		finalComposer.render();
-	}
-
-	function darkenNonBloomed(obj) {
-		if (obj.isMesh && bloomLayer.test(obj.layers) === false) {
-			materials[obj.uuid] = obj.material;
-			obj.material = darkMaterial;
-		}
-	}
-
-	function restoreMaterial(obj) {
-		if (materials[obj.uuid]) {
-			obj.material = materials[obj.uuid];
-			delete materials[obj.uuid];
-		}
-	}
+	let main = new Main();
+	main.init();
+	window.onresize = () => main.onResize();
+	window.addEventListener('pointerdown', (event) => main.onPointerDown(event));
+	main.render();
 </script>
 </body>
 </html>
