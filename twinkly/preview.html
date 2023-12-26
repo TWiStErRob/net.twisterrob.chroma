@@ -165,8 +165,9 @@
 			raycaster.setFromCamera(mouse, this.camera);
 			const intersects = raycaster.intersectObjects(this.scene.children, false);
 			if (intersects.length > 0) {
-				const object = intersects[0].object;
-				object.layers.toggle(BLOOM_SCENE);
+				/** @type {Bulb} */
+				const object = intersects[0].object.domain;
+				object.bloom(!object.bloom);
 				this.render();
 			}
 		}
@@ -210,28 +211,48 @@
 		}
 	}
 
+	class Bulb {
+		static geometry = new THREE.SphereGeometry();
+		constructor() {
+			const color = new THREE.Color();
+			color.setHSL(Math.random(), 0.7, Math.random() * 0.2 + 0.05);
+
+			this.material = new THREE.MeshBasicMaterial({ color: color });
+			this.sphere = new THREE.Mesh(Bulb.geometry, this.material);
+			this.sphere.position.x = Math.random() * 10 - 5;
+			this.sphere.position.y = Math.random() * 10 - 5;
+			this.sphere.position.z = Math.random() * 10 - 5;
+			this.sphere.position.normalize().multiplyScalar(Math.random() * 4.0 + 2.0);
+		}
+
+		get color() {
+			return this.material.color;
+		}
+		set color(value) {
+			this.material.color = value;
+		}
+
+		get object() {
+			return this.sphere;
+		}
+
+		set bloom(value) {
+			if (value) {
+				this.sphere.layers.enable(BLOOM_SCENE);
+			} else {
+				this.sphere.layers.disable(BLOOM_SCENE);
+			}
+		}
+	}
+
 	function setupScene(scene) {
 		scene.traverse(disposeMaterial);
 		scene.children.length = 0;
 
-		const geometry = new THREE.IcosahedronGeometry(1, 15);
-
 		for (let i = 0; i < 50; i++) {
-			const color = new THREE.Color();
-			color.setHSL(Math.random(), 0.7, Math.random() * 0.2 + 0.05);
-
-			const material = new THREE.MeshBasicMaterial({ color: color });
-			const sphere = new THREE.Mesh(geometry, material);
-			sphere.position.x = Math.random() * 10 - 5;
-			sphere.position.y = Math.random() * 10 - 5;
-			sphere.position.z = Math.random() * 10 - 5;
-			sphere.position.normalize().multiplyScalar(Math.random() * 4.0 + 2.0);
-			sphere.scale.setScalar(Math.random() * Math.random() + 0.5);
-			scene.add(sphere);
-
-			if (Math.random() < 0.25) {
-				sphere.layers.enable(BLOOM_SCENE);
-			}
+			let bulb = new Bulb();
+			scene.add(bulb.object);
+			bulb.bloom = Math.random() < 0.25;
 		}
 	}
 
