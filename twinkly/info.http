@@ -1,0 +1,72 @@
+@host = http://192.168.0.30
+
+
+###
+GET http://192.168.0.30/xled/v1/gestalt?filter=prod_infos&filter2=group
+Accept: application/json
+
+
+###
+POST {{host}}/xled/v1/login
+Content-Type: application/json
+Accept: application/json
+# challenge: 12345678901234567890123456789012
+
+{
+	"challenge": "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI="
+}
+
+> {%
+	client.test("Application response", function() {
+		client.assert(response.body["code"] === 1000, "Response code is not 1000");
+	});
+	// {"authentication_token":"5jPe+ONhwUY=","authentication_token_expires_in":14400,"challenge-response":"8d87f080947e343180da3f411df3997e3e9ae0cc","code":1000}'
+	client.global.set("token", response.body["authentication_token"]);
+	client.global.set("challenge", response.body["challenge-response"]);
+%}
+
+
+###
+POST {{host}}/xled/v1/verify
+X-Auth-Token: {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{"challenge-response": "{{challenge}}"}
+
+> {%
+	client.test("Application response", function() {
+		client.assert(response.body["code"] === 1000, "Response code was " + response.body["code"] + " instead of 1000");
+	});
+	client.global.clear("challenge");
+%}
+
+
+###
+GET http://192.168.0.30/xled/v1/summary
+X-Auth-Token: {{token}}
+Accept: application/json
+
+
+###
+GET http://192.168.0.30/xled/v1/led/mode
+X-Auth-Token: {{token}}
+Accept: application/json
+
+
+###
+GET http://192.168.0.30/xled/v1/movies/current
+X-Auth-Token: {{token}}
+Accept: application/json
+
+
+###
+GET http://192.168.0.30/xled/v1/movies
+X-Auth-Token: {{token}}
+Accept: application/json
+
+
+###
+GET http://192.168.0.30/xled/v1/led/layout/full HTTP/1.1
+X-Auth-Token: vaAc0A9fFxo=
+Accept: application/json
