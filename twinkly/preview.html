@@ -204,12 +204,140 @@
 		}
 	}
 
+	class Strip extends THREE.Group {
+		/** @type {Array<Strand>} */
+		strands;
+
+		constructor(...strands) {
+			super();
+			this.strands = strands;
+			strands.forEach((strand) => this.add(strand));
+		}
+
+		get ledCount() {
+			return this.strands.reduce((sum, strand) => sum + strand.ledCount, 0);
+		}
+
+		get leds() {
+			return this.strands.flatMap((strand) => strand.leds);
+		}
+
+		set frame(frame) {
+			const leds = this.leds;
+			for (let i = 0, l = leds.length; i < l; i++) {
+				const led = leds[i];
+				led.color = new THREE.Color(
+					frame[3 * i + 0] / 255.0,
+					frame[3 * i + 1] / 255.0,
+					frame[3 * i + 2] / 255.0,
+				);
+				led.lit = true;
+			}
+		}
+	}
+
+	class Strand extends THREE.Group {
+		/** @type {Wire} */
+		wire;
+
+		/** @type {LEDs} */
+		lights;
+
+		constructor(wire, lights) {
+			super();
+			this.wire = wire;
+			this.lights = lights;
+			this.add(wire);
+			this.add(lights);
+		}
+
+		get ledCount() {
+			return this.lights.ledCount;
+		}
+
+		get leds() {
+			return this.lights.leds;
+		}
+
+		static of(coordinates) {
+			const wire = Wire.of(coordinates);
+			const leds = LEDs.of(coordinates);
+			return new Strand(wire, leds);
+		}
+	}
+
+
+	class Wire extends Line2 {
+		/**
+		 * @param {Array<THREE.Vector3>} points
+		 */
+		constructor(points) {
+			const positions = Wire.curve(points, 4);
+			const geometry = new LineGeometry();
+			geometry.setPositions(positions);
+
+			const matLine = new LineMaterial({
+				color: 0x080808,
+				linewidth: .001,
+			});
+
+			super(geometry, matLine);
+			this.computeLineDistances();
+			this.scale.set(1, 1, 1);
+		}
+
+		/**
+		 * @param {Array<THREE.Vector3>} points
+		 * @param {Number} divide
+		 * @return {Array<Number>} [x,y,z, x,y,z, ...]
+		 */
+		static curve(points, divide) {
+			const spline = new THREE.CatmullRomCurve3(points);
+			const divisions = Math.round(divide * points.length);
+			const point = new THREE.Vector3();
+			const positions = [];
+			for (let i = 0, l = divisions; i < l; i++) {
+				const t = i / l;
+				spline.getPoint(t, point);
+				positions.push(point.x, point.y, point.z);
+			}
+			return positions;
+		}
+
+		static of(coordinates) {
+			return new Wire(coordinates.map((coordinate) => new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z)));
+		}
+	}
+
+
+	class LEDs extends THREE.Group {
+		/** @type {Array<LED>} */
+		leds;
+
+		constructor(leds) {
+			super();
+			this.leds = leds;
+			leds.forEach((led) => this.add(led));
+		}
+
+		get ledCount() {
+			return this.leds.length;
+		}
+
+		static of(coordinates) {
+			return new LEDs(coordinates.map((coordinate) => new LED(new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z))));
+		}
+	}
+
 	class LED extends THREE.Mesh {
 		static geometry = new THREE.SphereGeometry(0.015);
 
+		/**
+		 * @param {THREE.Vector3} position
+		 */
 		constructor(position) {
 			super(LED.geometry, LED.prepareMaterial());
-			this.position.set(position.x, position.y, position.z);
+			this.position.copy(position);
 		}
 
 		static prepareMaterial() {
@@ -280,90 +408,44 @@
 			.then((data) => {
 				const coordinates = data;
 				coordinates.forEach((c) => c.y *= 2);
-				let { leds, strands } = buildLed(coordinates);
-				leds.forEach((obj) => scene.add(obj));
-				strands.forEach((obj) => scene.add(obj));
+				let midPoint = coordinates.length / 2;
+				const strip = new Strip(
+					Strand.of(coordinates.slice(undefined, midPoint)),
+					Strand.of(coordinates.slice(midPoint, undefined)),
+				);
+				scene.add(strip);
 				main.render();
-				return leds;
+				return strip;
 			})
-			.then((leds) => {
-				startMovie(leds, "movies/rainbow-simple.raw");
+			.then((strip) => {
+				startMovie(strip, "movies/rainbow-simple.raw");
 			})
 		;
 	}
 
-	function startMovie(leds, path) {
+	/**
+	 * @param {Strip} strip
+	 * @param {string} path
+	 */
+	function startMovie(strip, path) {
 		fetch(path)
 			.then((response) => response.arrayBuffer())
 			.then((data) => {
 				const movie = new Uint8Array(data);
-				const frames = movie.length / 3 / leds.length;
+				const frames = movie.length / 3 / strip.ledCount;
 				let frameId = 0;
-				const frameSize = 3 * leds.length;
+				const frameSize = 3 * strip.ledCount;
 				renderAndNext();
 
 				function renderAndNext() {
 					//console.log(`Frame ${frameId} of ${frames}`);
-					const frame = movie.slice(frameId * frameSize, (frameId + 1) * frameSize);
-					renderFrame(leds, frame);
+					strip.frame = movie.slice(frameId * frameSize, (frameId + 1) * frameSize);
+					main.render();
 					frameId = (frameId + 1) % frames;
 					setTimeout(renderAndNext, 1000 / 15);
 				}
 			})
 		;
-	}
-
-	function renderFrame(leds, frame) {
-		for (let i = 0; i < leds.length; i++) {
-			/** @type {LED} */
-			const led = leds[i];
-			led.color = new THREE.Color(
-				frame[3 * i + 0] / 255.0,
-				frame[3 * i + 1] / 255.0,
-				frame[3 * i + 2] / 255.0,
-			);
-			led.lit = true;
-		}
-		main.render();
-	}
-
-	/**
-	 * @param {Array<{x,y,z}>} coordinates
-	 */
-	function buildLed(coordinates) {
-		const leds = coordinates.map((coordinate) => {
-			const position = new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z);
-			let bulb = new LED(position);
-			bulb.lit = Math.random() < 0.6;
-			return bulb;
-		});
-		let midPoint = coordinates.length / 2;
-		let strands = [
-			buildStrand(coordinates.slice(undefined, midPoint)),
-			buildStrand(coordinates.slice(midPoint, undefined)),
-		];
-		return { leds, strands };
-	}
-
-	/**
-	 * @param {Array<{x,y,z}>} coordinates
-	 * @return {THREE.Object3D}
-	 */
-	function buildStrand(coordinates) {
-		const points = coordinates.map((coordinate) => new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z));
-		const positions = curve(points, 4);
-		const geometry = new LineGeometry();
-		geometry.setPositions(positions);
-
-		const matLine = new LineMaterial({
-			color: 0x080808,
-			linewidth: .001,
-		});
-
-		const line = new Line2(geometry, matLine);
-		line.computeLineDistances();
-		line.scale.set(1, 1, 1);
-		return line;
 	}
 
 	function createAxes() {
@@ -376,24 +458,6 @@
 		negative.material.transparent = true;
 		negative.material.opacity = .01;
 		return [ positive, negative ];
-	}
-
-	/**
-	 * @param {Array<THREE.Vector3>} points
-	 * @param {Number} divide
-	 * @return {Array<Number>} [x,y,z, x,y,z, ...]
-	 */
-	function curve(points, divide) {
-		const spline = new THREE.CatmullRomCurve3(points);
-		const divisions = Math.round(divide * points.length);
-		const point = new THREE.Vector3();
-		const positions = [];
-		for (let i = 0, l = divisions; i < l; i++) {
-			const t = i / l;
-			spline.getPoint(t, point);
-			positions.push(point.x, point.y, point.z);
-		}
-		return positions;
 	}
 
 	let main = new Main();
