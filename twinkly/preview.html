@@ -280,13 +280,14 @@
 			.then((data) => {
 				const coordinates = data;
 				coordinates.forEach((c) => c.y *= 2);
-				let leds = buildLed(coordinates);
+				let { leds, strands } = buildLed(coordinates);
 				leds.forEach((obj) => scene.add(obj));
+				strands.forEach((obj) => scene.add(obj));
 				main.render();
 				return leds;
 			})
 			.then((leds) => {
-				startMovie(leds, "movies/rainbow-uncalibrated.raw");
+				startMovie(leds, "movies/rainbow-simple.raw");
 			})
 		;
 	}
@@ -296,11 +297,18 @@
 			.then((response) => response.arrayBuffer())
 			.then((data) => {
 				const movie = new Uint8Array(data);
-				const frames = data.length / 3 / leds.length;
-				const frameId = 0;
+				const frames = movie.length / 3 / leds.length;
+				let frameId = 0;
 				const frameSize = 3 * leds.length;
-				const frame = movie.slice(frameId * frameSize, (frameId + 1) * frameSize);
-				renderFrame(leds, frame);
+				renderAndNext();
+
+				function renderAndNext() {
+					//console.log(`Frame ${frameId} of ${frames}`);
+					const frame = movie.slice(frameId * frameSize, (frameId + 1) * frameSize);
+					renderFrame(leds, frame);
+					frameId = (frameId + 1) % frames;
+					setTimeout(renderAndNext, 1000 / 15);
+				}
 			})
 		;
 	}
@@ -321,10 +329,8 @@
 
 	/**
 	 * @param {Array<{x,y,z}>} coordinates
-	 * @return {Array<THREE.Object3D>}
 	 */
 	function buildLed(coordinates) {
-		/** @type {Array<THREE.Object3D>} */
 		const leds = coordinates.map((coordinate) => {
 			const position = new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z);
 			let bulb = new LED(position);
@@ -336,7 +342,7 @@
 			buildStrand(coordinates.slice(undefined, midPoint)),
 			buildStrand(coordinates.slice(midPoint, undefined)),
 		];
-		return leds.concat(strands);
+		return { leds, strands };
 	}
 
 	/**
