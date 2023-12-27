@@ -731,13 +731,13 @@
 			},
 
 			get frameCount() {
-				return 60;
+				return 50;
 			},
 
 			get(index) {
 				const frame = Frame.static(strip.ledCount, new THREE.Color(0xff7811));
 				const raycaster = new THREE.Raycaster();
-				const rMax = 0.60 + 0.2 * 1;
+				const rMax = 0.65;
 				heart.scale.set(rMax, rMax, rMax);
 				heart.updateWorldMatrix(false, true);
 				strip.leds
@@ -746,7 +746,7 @@
 						frame.colors[led.index] = new THREE.Color(0, 0, 0);
 					})
 				;
-				const r = 0.60 + 0.2 * Math.sin((index / this.frameCount) * 2 * 3.14);
+				const r = 0.35 + 0.30 * Math.sin((index / this.frameCount) * 2 * 3.14);
 				heart.scale.set(r, r, r);
 				heart.updateWorldMatrix(false, true);
 				strip.leds
