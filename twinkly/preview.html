@@ -222,28 +222,22 @@
 			return this.strands.flatMap((strand) => strand.leds);
 		}
 
+		/**
+		 * @param {Frame} frame
+		 */
 		set frame(frame) {
-			const leds = this.leds;
-			for (let i = 0, l = leds.length; i < l; i++) {
-				const led = leds[i];
-				led.color = new THREE.Color(
-					frame[3 * i + 0] / 255.0,
-					frame[3 * i + 1] / 255.0,
-					frame[3 * i + 2] / 255.0,
-				);
-				led.lit = true;
-			}
+			this.leds.forEach((led) => led.color = frame.get(led.index));
+		}
+
+		set lit(value) {
+			this.leds.forEach((led) => led.lit = value);
 		}
 
 		/**
 		 * @param {Array<{x: number, y: number, z: number}>} coordinates
 		 */
 		layout(coordinates) {
-			let midPoint = coordinates.length / 2;
-			const line1 = coordinates.slice(undefined, midPoint);
-			const line2 = coordinates.slice(midPoint, undefined);
-			this.strands[0].layout(line1);
-			this.strands[1].layout(line2);
+			this.strands.forEach((strand) => strand.layout(coordinates));
 		}
 	}
 
@@ -275,7 +269,7 @@
 		 */
 		layout(coordinates) {
 			this.lights.layout(coordinates);
-			this.wire.layout(coordinates);
+			this.wire.layout(this.lights, coordinates);
 		}
 	}
 
@@ -312,10 +306,14 @@
 		}
 
 		/**
+		 * @param {LEDs} lights
 		 * @param {Array<{x: number, y: number, z: number}>} coordinates
 		 */
-		layout(coordinates) {
-			let points = coordinates.map((c) => new THREE.Vector3(c.x, c.y, c.z));
+		layout(lights, coordinates) {
+			const points = lights.leds.map((led) => {
+				const c = coordinates[led.index];
+				return new THREE.Vector3(c.x, c.y, c.z);
+			});
 			const positions = Wire.curve(points, 4);
 			this.geometry.setPositions(positions);
 			this.computeLineDistances();
@@ -326,9 +324,9 @@
 		/** @type {Array<LED>} */
 		leds;
 
-		constructor(count) {
+		constructor(count, baseIndex) {
 			super();
-			this.leds = Array.from({ length: count }, () => new LED());
+			this.leds = Array.from({ length: count }, (_, index) => new LED(baseIndex + index));
 			this.leds.forEach((led) => this.add(led));
 		}
 
@@ -340,8 +338,8 @@
 		 * @param {Array<{x: number, y: number, z: number}>} coordinates
 		 */
 		layout(coordinates) {
-			this.leds.forEach((led, i) => {
-				const coordinate = coordinates[i];
+			this.leds.forEach((led) => {
+				const coordinate = coordinates[led.index];
 				led.position.set(coordinate.x, coordinate.y, coordinate.z);
 			});
 		}
@@ -350,18 +348,22 @@
 	class LED extends THREE.Mesh {
 		static geometry = new THREE.SphereGeometry(0.015);
 
-		constructor() {
-			const color = new THREE.Color();
-			color.setHSL(Math.random(), 0.7, Math.random() * 0.2 + 0.05);
+		/** @type {number} */
+		index;
 
+		constructor(index) {
+			if (!(index >= 0)) {
+				throw new Error(`Invalid index: ${index}.`);
+			}
 			super(
 				LED.geometry,
 				new THREE.MeshStandardMaterial({
 					toneMapped: false,
-					emissive: color,
+					emissive: new THREE.Color(1, 1, 1),
 					emissiveIntensity: 0,
 				}),
 			);
+			this.index = index;
 		}
 
 		get color() {
@@ -370,10 +372,6 @@
 
 		set color(value) {
 			this.material.emissive = value;
-		}
-
-		get object() {
-			return this;
 		}
 
 		get lit() {
@@ -418,18 +416,191 @@
 		}
 	}
 
+	class Movie {
+		get frameCount() {
+			throw new Error("Abstract, not implemented.");
+		}
+
+		get(index) {
+			throw new Error("Abstract, not implemented.");
+		}
+	}
+
+	class StaticMovie extends Movie {
+		/** @type {Array<Frame>} */
+		frames;
+
+		constructor(frames) {
+			super();
+			this.frames = frames;
+		}
+
+		get frameCount() {
+			return this.frames.length;
+		}
+
+		get(index) {
+			if (index < 0 || index >= this.frames.length) {
+				throw new Error("Index out of bounds.");
+			}
+			return this.frames[index];
+		}
+	}
+
+	class Frame {
+		/** @type {Array<THREE.Color>} */
+		colors;
+
+		constructor(colors) {
+			this.colors = colors;
+		}
+
+		get(index) {
+			return this.colors[index];
+		}
+
+		/**
+		 * @param {number} ledCount
+		 * @return {Frame}
+		 */
+		static random(ledCount) {
+			return new Frame(Array.from({ length: ledCount }, (_, index) => {
+				const color = new THREE.Color();
+				color.setHSL(Math.random(), 0.7, Math.random() * 0.2 + 0.05);
+				return color;
+			}));
+		}
+	}
+
+	class MoviePlayer {
+		/** @type {Movie} */
+		movie;
+
+		/** @type {FrameStepper} */
+		index;
+
+		/** @type {Strip} */
+		strip;
+
+		/** @type {number|undefined} */
+		running;
+
+		/** @type {function} */
+		onNext;
+
+		/**
+		 * @param {Strip} strip
+		 * @param {function} onNext
+		 * @param {Movie} movie
+		 */
+		constructor(strip, onNext, movie) {
+			this.movie = movie;
+			this.onNext = onNext;
+			this.index = new FrameStepper(movie.frameCount);
+			this.strip = strip;
+		}
+
+		/**
+		 * @return {Frame}
+		 */
+		get current() {
+			return this.movie.get(this.index.current);
+		}
+
+		next() {
+			this.index.next();
+			this.strip.frame = this.current;
+			this.onNext();
+			this.running = setTimeout(() => this.next(), 1000 / 15);
+		}
+
+		start() {
+			this.strip.lit = true;
+			this.next();
+		}
+
+		stop() {
+			clearTimeout(this.running);
+			this.running = undefined;
+		}
+	}
+
+	class FrameStepper {
+		/** @type {number} */
+		frameIndex;
+
+		/** @type {number} */
+		frameCount;
+
+		constructor(frameCount) {
+			if (frameCount <= 0) {
+				throw new Error("Frame count must be positive.");
+			}
+			this.frameCount = frameCount;
+			this.frameIndex = -1;
+		}
+
+		get current() {
+			if (this.frameIndex < 0) {
+				throw new Error("Not started.");
+			}
+			return this.frameIndex;
+		}
+
+		/**
+		 * @return {number}
+		 */
+		next() {
+			this.frameIndex = (this.frameIndex + 1) % this.frameCount;
+			return this.frameIndex;
+		}
+	}
+
+	class RawMovie {
+		/** @type {Uint8Array} */
+		data;
+
+		constructor(data) {
+			this.data = data;
+		}
+
+		/**
+		 * @return {StaticMovie}
+		 */
+		toMovie(ledCount) {
+			const frameSize = 3 * ledCount;
+			const frameCount = this.data.length / frameSize;
+			return new StaticMovie(
+				Array.from({ length: frameCount }, (_, index) => {
+					const rgbs = this.data.slice(index * frameSize, (index + 1) * frameSize);
+					const colors = Array.from({ length: ledCount }, (_, index) => {
+						return new THREE.Color(
+							rgbs[index * 3 + 0] / 255.0,
+							rgbs[index * 3 + 1] / 255.0,
+							rgbs[index * 3 + 2] / 255.0,
+						);
+					});
+					return new Frame(colors);
+				}),
+			);
+		}
+	}
+
 	function setupScene(scene) {
 		scene.clear();
 		createAxes().forEach((obj) => scene.add(obj));
 		scene.add(new THREE.AmbientLight(0x101010));
 		scene.add(buildBox());
 		const strip = new Strip(
-			new Strand(new Wire(), new LEDs(100)),
-			new Strand(new Wire(), new LEDs(100)),
+			new Strand(new Wire(), new LEDs(100, 0)),
+			new Strand(new Wire(), new LEDs(100, 100)),
 		);
 		scene.add(strip);
 		loadLayout(strip, "layouts/christmas-2023-detailed3d.json")
 			.then(() => {
+				//strip.frame = Frame.random(strip.ledCount);
+				//strip.lit = true;
+				//main.render();
 				startMovie(strip, "movies/rainbow-simple.raw");
 			});
 	}
@@ -466,19 +637,9 @@
 		fetch(path)
 			.then((response) => response.arrayBuffer())
 			.then((data) => {
-				const movie = new Uint8Array(data);
-				const frames = movie.length / 3 / strip.ledCount;
-				let frameId = 0;
-				const frameSize = 3 * strip.ledCount;
-				renderAndNext();
-
-				function renderAndNext() {
-					//console.log(`Frame ${frameId} of ${frames}`);
-					strip.frame = movie.slice(frameId * frameSize, (frameId + 1) * frameSize);
-					main.render();
-					frameId = (frameId + 1) % frames;
-					setTimeout(renderAndNext, 1000 / 15);
-				}
+				const movie = new RawMovie(new Uint8Array(data)).toMovie(strip.ledCount);
+				const player = new MoviePlayer(strip, main.render.bind(main), movie);
+				player.start();
 			})
 		;
 	}
