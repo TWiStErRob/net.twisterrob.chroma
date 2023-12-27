@@ -417,6 +417,10 @@
 	}
 
 	class Movie {
+		get fps() {
+			throw new Error("Abstract, not implemented.");
+		}
+
 		get frameCount() {
 			throw new Error("Abstract, not implemented.");
 		}
@@ -430,9 +434,14 @@
 		/** @type {Array<Frame>} */
 		frames;
 
-		constructor(frames) {
+		constructor(frames, fps) {
 			super();
+			this._fps = fps;
 			this.frames = frames;
+		}
+
+		get fps() {
+			return this._fps;
 		}
 
 		get frameCount() {
@@ -511,7 +520,7 @@
 			this.index.next();
 			this.strip.frame = this.current;
 			this.onNext();
-			this.running = setTimeout(() => this.next(), 1000 / 15);
+			this.running = setTimeout(() => this.next(), 1000 / this.movie.fps);
 		}
 
 		start() {
@@ -567,7 +576,7 @@
 		/**
 		 * @return {StaticMovie}
 		 */
-		toMovie(ledCount) {
+		toMovie(ledCount, fps) {
 			const frameSize = 3 * ledCount;
 			const frameCount = this.data.length / frameSize;
 			return new StaticMovie(
@@ -582,6 +591,7 @@
 					});
 					return new Frame(colors);
 				}),
+				fps,
 			);
 		}
 	}
@@ -637,7 +647,7 @@
 		fetch(path)
 			.then((response) => response.arrayBuffer())
 			.then((data) => {
-				const movie = new RawMovie(new Uint8Array(data)).toMovie(strip.ledCount);
+				const movie = new RawMovie(new Uint8Array(data)).toMovie(strip.ledCount, 15);
 				const player = new MoviePlayer(strip, main.render.bind(main), movie);
 				player.start();
 			})
