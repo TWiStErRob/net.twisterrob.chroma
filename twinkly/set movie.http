@@ -47,7 +47,7 @@ Accept: application/json
 {
 	"descriptor_type": "rgb_raw",
 	"fps": 40,
-	"frames_number": 30,
+	"frames_number": 60,
 	"id": 0,
 	"leds_per_frame": 200,
 	"name": "Heart",
@@ -63,7 +63,7 @@ X-Auth-Token: {{token}}
 Content-Type: application/octet-stream
 Accept: application/json
 
-< movies/generated-heart-v3.raw
+< movies/generated-heart-v5.raw
 > verify-app-response.js
 
 

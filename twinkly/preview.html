@@ -23,8 +23,9 @@
 <script type="module">
 	"use strict";
 	import * as THREE from 'three';
-
-	THREE.ColorManagement.legacyMode = false;
+	// Stop messing with my RGB values!
+	THREE.ColorManagement.enabled = false;
+	window.THREE = THREE; // For Chrome console.
 
 	import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
@@ -51,7 +52,7 @@
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			renderer.toneMapping = THREE.ReinhardToneMapping;
-			renderer.outputColorSpace = THREE.SRGBColorSpace;
+			renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 			document.body.appendChild(renderer.domElement);
 			this.renderer = renderer;
 
@@ -730,7 +731,7 @@
 			},
 
 			get frameCount() {
-				return 30;
+				return 60;
 			},
 
 			get(index) {
