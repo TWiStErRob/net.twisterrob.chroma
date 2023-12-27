@@ -280,10 +280,43 @@
 			.then((data) => {
 				const coordinates = data;
 				coordinates.forEach((c) => c.y *= 2);
-				buildLed(coordinates).forEach((obj) => scene.add(obj));
+				let leds = buildLed(coordinates);
+				leds.forEach((obj) => scene.add(obj));
 				main.render();
+				return leds;
+			})
+			.then((leds) => {
+				startMovie(leds, "movies/rainbow-uncalibrated.raw");
 			})
 		;
+	}
+
+	function startMovie(leds, path) {
+		fetch(path)
+			.then((response) => response.arrayBuffer())
+			.then((data) => {
+				const movie = new Uint8Array(data);
+				const frames = data.length / 3 / leds.length;
+				const frameId = 0;
+				const frameSize = 3 * leds.length;
+				const frame = movie.slice(frameId * frameSize, (frameId + 1) * frameSize);
+				renderFrame(leds, frame);
+			})
+		;
+	}
+
+	function renderFrame(leds, frame) {
+		for (let i = 0; i < leds.length; i++) {
+			/** @type {LED} */
+			const led = leds[i];
+			led.color = new THREE.Color(
+				frame[3 * i + 0] / 255.0,
+				frame[3 * i + 1] / 255.0,
+				frame[3 * i + 2] / 255.0,
+			);
+			led.lit = true;
+		}
+		main.render();
 	}
 
 	/**
