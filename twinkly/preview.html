@@ -21,6 +21,7 @@
 </script>
 
 <script type="module">
+	"use strict";
 	import * as THREE from 'three';
 
 	THREE.ColorManagement.legacyMode = false;
@@ -46,7 +47,7 @@
 			const renderer = new THREE.WebGLRenderer({ antialias: true });
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setSize(window.innerWidth, window.innerHeight);
-			renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			renderer.toneMapping = THREE.ReinhardToneMapping;
 			renderer.outputColorSpace = THREE.SRGBColorSpace;
 			document.body.appendChild(renderer.domElement);
 			this.renderer = renderer;
@@ -112,6 +113,14 @@
 				that.renderer.toneMappingExposure = Math.pow(value, 4.0);
 				that.render();
 			});
+
+			const environmentFolder = gui.addFolder('environment');
+
+			environmentFolder.add(LED.geometry.parameters, 'radius', 0, 0.05).step(0.001).onChange(function(value) {
+				LED.geometry = new THREE.SphereGeometry(value);
+				setupScene(that.scene);
+				that.render();
+			});
 		}
 
 		onPointerDown(event) {
@@ -124,9 +133,9 @@
 			raycaster.setFromCamera(mouse, this.camera);
 			const intersects = raycaster.intersectObjects(this.scene.children, false);
 			if (intersects.length > 0) {
-				/** @type {Bulb} */
-				const object = intersects[0].object.domain;
-				object.bloom(!object.bloom);
+				/** @type {LED} */
+				const object = intersects[0].object;
+				object.lit = !object.lit;
 				this.render();
 			}
 		}
@@ -148,36 +157,49 @@
 		}
 	}
 
-	class Bulb {
+	class LED extends THREE.Mesh {
 		static geometry = new THREE.SphereGeometry(0.015);
 
 		constructor(position) {
+			super(LED.geometry, LED.prepareMaterial());
+			this.position.set(position.x, position.y, position.z);
+		}
+
+		static prepareMaterial() {
 			const color = new THREE.Color();
 			color.setHSL(Math.random(), 0.7, Math.random() * 0.2 + 0.05);
 
-			this.material = new THREE.MeshBasicMaterial({ color: color });
-			this.sphere = new THREE.Mesh(Bulb.geometry, this.material);
-			this.sphere.position.set(position.x, position.y, position.z);
+			return new THREE.MeshStandardMaterial({
+				toneMapped: false,
+				emissive: color,
+				emissiveIntensity: 0,
+			});
 		}
-
 		get color() {
-			return this.material.color;
+			return this.material.emissive;
 		}
 
 		set color(value) {
-			this.material.color = value;
+			this.material.emissive = value;
 		}
 
 		get object() {
-			return this.sphere;
+			return this;
 		}
 
-		set bloom(value) {
+		get lit() {
+			return this.material.emissiveIntensity > 0;
+		}
+		set lit(value) {
+			this.material.emissiveIntensity = value ? 1 : 0;
 		}
 	}
 
 	function setupScene(scene) {
 		scene.children.length = 0;
+		const light = new THREE.AmbientLight(0x101010);
+		scene.add(light);
+
 		const coordinates = [
 			{ x: 0.220093, y: 0.084900, z: 0.408569 },
 			{ x: 0.261353, y: 0.116882, z: 0.554810 },
@@ -384,9 +406,9 @@
 		for (let i = 0; i < coordinates.length; i++) {
 			const position = new THREE.Vector3(coordinates[i].x, coordinates[i].y, coordinates[i].z);
 			position.y *= 2;
-			let bulb = new Bulb(position);
-			scene.add(bulb.object);
-			bulb.bloom = Math.random() < 0.6;
+			let bulb = new LED(position);
+			scene.add(bulb);
+			bulb.lit = Math.random() < 0.6;
 		}
 	}
 
