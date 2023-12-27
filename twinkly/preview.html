@@ -435,17 +435,23 @@
 			bulb.lit = Math.random() < 0.6;
 			return bulb;
 		});
-		return leds.concat(buildStrands(coordinates));
+		let midPoint = coordinates.length / 2;
+		let strands = [
+			buildStrand(coordinates.slice(undefined, midPoint)),
+			buildStrand(coordinates.slice(midPoint, undefined))
+		];
+		return leds.concat(strands);
 	}
 
 	/**
 	 * @param {Array<{x,y,z}>} coordinates
-	 * @return {Array<THREE.Object3D>}
+	 * @return {THREE.Object3D}
 	 */
-	function buildStrands(coordinates) {
-		const points = coordinates.flatMap((coordinate) => [ coordinate.x, coordinate.y, coordinate.z ]);
+	function buildStrand(coordinates) {
+		const points = coordinates.map((coordinate) => new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z));
+		const positions = curve(points, 4);
 		const geometry = new LineGeometry();
-		geometry.setPositions(points);
+		geometry.setPositions(positions);
 
 		const matLine = new LineMaterial({
 			color: 0x080808,
@@ -455,7 +461,7 @@
 		const line = new Line2(geometry, matLine);
 		line.computeLineDistances();
 		line.scale.set(1, 1, 1);
-		return [ line ];
+		return line;
 	}
 
 	function createAxes() {
@@ -468,6 +474,24 @@
 		negative.material.transparent = true;
 		negative.material.opacity = .01;
 		return [ positive, negative ];
+	}
+
+	/**
+	 * @param {Array<THREE.Vector3>} points
+	 * @param {Number} divide
+	 * @return {Array<Number>} [x,y,z, x,y,z, ...]
+	 */
+	function curve(points, divide) {
+		const spline = new THREE.CatmullRomCurve3(points);
+		const divisions = Math.round(divide * points.length);
+		const point = new THREE.Vector3();
+		const positions = [];
+		for (let i = 0, l = divisions; i < l; i++) {
+			const t = i / l;
+			spline.getPoint(t, point);
+			positions.push(point.x, point.y, point.z);
+		}
+		return positions;
 	}
 
 	let main = new Main();
