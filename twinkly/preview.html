@@ -470,6 +470,15 @@
 
 		/**
 		 * @param {number} ledCount
+		 * @param {THREE.Color} color
+		 * @return {Frame}
+		 */
+		static static(ledCount, color) {
+			return new Frame(Array.from({ length: ledCount }, () => color.clone()));
+		}
+
+		/**
+		 * @param {number} ledCount
 		 * @return {Frame}
 		 */
 		static random(ledCount) {
@@ -600,7 +609,7 @@
 		scene.clear();
 		createAxes().forEach((obj) => scene.add(obj));
 		scene.add(new THREE.AmbientLight(0x101010));
-		scene.add(buildBox());
+		//scene.add(buildBox());
 		const strip = new Strip(
 			new Strand(new Wire(), new LEDs(100, 0)),
 			new Strand(new Wire(), new LEDs(100, 100)),
@@ -612,9 +621,12 @@
 				//strip.lit = true;
 				//main.render();
 
-				// startMovie(strip, "movies/rainbow-simple.raw");
+				//startMovie(strip, "movies/generated-heart.raw");
 
-				generateRandomMovie(strip);
+				const movie = generateHeartMovie(strip, scene);
+				const player = new MoviePlayer(strip, main.render.bind(main), movie);
+				player.start();
+				//saveByteArray("heart.raw", toRaw(movie));
 			});
 	}
 
@@ -672,6 +684,95 @@
 			},
 		});
 		player.start();
+	}
+
+	function isInside(raycaster, object, point) {
+		raycaster.set(point, new THREE.Vector3(1, 1, 1));
+		const intersects = raycaster.intersectObject(object, false);
+		return intersects.length % 2 === 1;
+	}
+
+	/**
+	 * @param {Strip} strip
+	 * @param {THREE.Scene} scene
+	 * @return {Frame}
+	 */
+	function generateHeartMovie(strip, scene) {
+		const heart = new THREE.Group();
+		const collision = new THREE.Mesh(
+			new THREE.SphereGeometry(0.60, 12, 12),
+			new THREE.MeshBasicMaterial({
+				side: THREE.DoubleSide,
+				visible: false,
+			}),
+		);
+		heart.add(collision);
+		heart.add(new THREE.LineSegments(
+			new THREE.EdgesGeometry(collision.geometry),
+			new THREE.LineBasicMaterial({
+				color: 0xffff00,
+				opacity: 0.05,
+				transparent: true,
+			}),
+		));
+		heart.add(new THREE.Mesh(
+			new THREE.SphereGeometry(0.01),
+			new THREE.MeshBasicMaterial({
+				color: 0x00ff00,
+			}),
+		));
+		heart.position.set(0, 0.5, 0);
+		// mesh.visible = false;
+		scene.add(heart);
+		const movie = {
+			get fps() {
+				return 30;
+			},
+
+			get frameCount() {
+				return 100;
+			},
+
+			get(index) {
+				const r = 1 + 0.3 * Math.sin((index / this.frameCount) * 2 * 3.14);
+				heart.scale.set(r, r, r);
+				const frame = Frame.static(strip.ledCount, new THREE.Color(1, 1, 1));
+				const raycaster = new THREE.Raycaster();
+				strip.leds
+					.filter((led) => isInside(raycaster, collision, led.position))
+					.forEach((led) => {
+						frame.colors[led.index] = new THREE.Color(0.5, 0, 0);
+					})
+				;
+				return frame;
+			},
+		};
+		return movie;
+	}
+
+	/**
+	 * @param {Movie} movie
+	 * @return {Uint8Array}
+	 */
+	function toRaw(movie) {
+		const result = new Uint8Array(movie.frameCount * movie.get(0).colors.length * 3);
+		for (let i = 0; i < movie.frameCount; i++) {
+			const frame = movie.get(i);
+			for (let c = 0; c < frame.colors.length; c++) {
+				const color = frame.colors[c];
+				result[(i * frame.colors.length + c) * 3 + 0] = Math.round(color.r * 255);
+				result[(i * frame.colors.length + c) * 3 + 1] = Math.round(color.g * 255);
+				result[(i * frame.colors.length + c) * 3 + 2] = Math.round(color.b * 255);
+			}
+		}
+		return result;
+	}
+
+	function saveByteArray(fileName, byte) {
+		const link = document.createElement('a');
+		link.href = window.URL.createObjectURL(new Blob([ byte ], { type: "application/pdf" }));
+		link.download = fileName;
+		link.click();
 	}
 
 	function createAxes() {

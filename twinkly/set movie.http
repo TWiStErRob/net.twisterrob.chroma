@@ -47,10 +47,10 @@ Accept: application/json
 {
 	"descriptor_type": "rgb_raw",
 	"fps": 15,
-	"frames_number": 75,
+	"frames_number": 100,
 	"id": 0,
 	"leds_per_frame": 200,
-	"name": "Orange (1/4)",
+	"name": "Heart",
 	"unique_id": "{{new-movie}}"
 }
 
@@ -63,7 +63,7 @@ X-Auth-Token: {{token}}
 Content-Type: application/octet-stream
 Accept: application/json
 
-< movies/orange-4.raw
+< movies/generated-heart.raw
 > verify-app-response.js
 
 
