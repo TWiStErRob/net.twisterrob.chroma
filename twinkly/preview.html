@@ -334,6 +334,48 @@
 		}
 
 		onPointerDown(event) {
+			if (this.hoveredLED) {
+				this.hoveredLED.lit = !this.hoveredLED.lit;
+				this.render();
+			}
+		}
+
+		/** @type {LED|null} */
+		hoveredLED = null;
+		onPointerMove(event) {
+			const currentObject = this.cast(event);
+			if (this.hoveredLED === null && currentObject) {
+				this.onEnter(currentObject);
+				this.hoveredLED = currentObject;
+				this.render();
+			} else if (this.hoveredLED !== null && currentObject === null) {
+				const existingObject = this.hoveredLED;
+				this.hoveredLED = null;
+				this.onExit(existingObject);
+				this.render();
+			} else if (this.hoveredLED !== null && currentObject !== null && this.hoveredLED !== currentObject) {
+				const existingLED = this.hoveredLED;
+				this.hoveredLED = null;
+				this.onExit(existingLED);
+				this.onEnter(currentObject);
+				this.hoveredLED = currentObject;
+				this.render();
+			}
+		}
+
+		/** @param led {LED} */
+		onEnter(led) {
+			//console.log("enter", object);
+			led.highlight = true;
+		}
+		
+		/** @param led {LED} */
+		onExit(led) {
+			//console.log("exit", object);
+			led.highlight = false;
+		}
+
+		cast(event) {
 			const mouse = new THREE.Vector2(
 				(event.clientX / window.innerWidth) * 2 - 1,
 				-(event.clientY / window.innerHeight) * 2 + 1,
@@ -342,11 +384,11 @@
 			const raycaster = new THREE.Raycaster();
 			raycaster.setFromCamera(mouse, this.camera);
 			const intersects = raycaster.intersectObjects(this.scene.children, false);
-			if (intersects.length > 0) {
-				/** @type {LED} */
-				const object = intersects[0].object;
-				object.lit = !object.lit;
-				this.render();
+			const leds = intersects.filter((intersect) => intersect.object instanceof LED);
+			if (leds.length > 0) {
+				return leds[0].object;
+			} else {
+				return null;
 			}
 		}
 
@@ -404,6 +446,20 @@
 
 		set lit(value) {
 			this.material.emissiveIntensity = value? 1 : 0;
+		}
+
+		get highlight() {
+			return this.material.userData.preHighlightIntensity !== undefined;
+		}
+
+		set highlight(value) {
+			if (value) {
+				this.material.userData.preHighlightIntensity = this.material.emissiveIntensity;
+				this.material.emissiveIntensity = 4;
+			} else if (this.highlight) {
+				this.material.emissiveIntensity = this.material.userData.preHighlightIntensity;
+				delete this.material.userData.preHighlightIntensity;
+			}
 		}
 	}
 
@@ -498,6 +554,7 @@
 	main.init();
 	window.onresize = () => main.onResize();
 	window.addEventListener('pointerdown', (event) => main.onPointerDown(event));
+	window.addEventListener("mousemove", (event) => main.onPointerMove(event));
 	main.render();
 </script>
 </body>
