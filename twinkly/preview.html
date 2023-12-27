@@ -234,6 +234,17 @@
 				led.lit = true;
 			}
 		}
+
+		/**
+		 * @param {Array<{x: number, y: number, z: number}>} coordinates
+		 */
+		layout(coordinates) {
+			let midPoint = coordinates.length / 2;
+			const line1 = coordinates.slice(undefined, midPoint);
+			const line2 = coordinates.slice(midPoint, undefined);
+			this.strands[0].layout(line1);
+			this.strands[1].layout(line2);
+		}
 	}
 
 	class Strand extends THREE.Group {
@@ -259,30 +270,26 @@
 			return this.lights.leds;
 		}
 
-		static of(coordinates) {
-			const wire = Wire.of(coordinates);
-			const leds = LEDs.of(coordinates);
-			return new Strand(wire, leds);
+		/**
+		 * @param {Array<{x: number, y: number, z: number}>} coordinates
+		 */
+		layout(coordinates) {
+			this.lights.layout(coordinates);
+			this.wire.layout(coordinates);
 		}
 	}
 
 
 	class Wire extends Line2 {
-		/**
-		 * @param {Array<THREE.Vector3>} points
-		 */
-		constructor(points) {
-			const positions = Wire.curve(points, 4);
-			const geometry = new LineGeometry();
-			geometry.setPositions(positions);
 
-			const matLine = new LineMaterial({
-				color: 0x080808,
-				linewidth: .001,
-			});
-
-			super(geometry, matLine);
-			this.computeLineDistances();
+		constructor() {
+			super(
+				new LineGeometry(),
+				new LineMaterial({
+					color: 0x080808,
+					linewidth: .001,
+				}),
+			);
 			this.scale.set(1, 1, 1);
 		}
 
@@ -304,51 +311,57 @@
 			return positions;
 		}
 
-		static of(coordinates) {
-			return new Wire(coordinates.map((coordinate) => new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z)));
+		/**
+		 * @param {Array<{x: number, y: number, z: number}>} coordinates
+		 */
+		layout(coordinates) {
+			let points = coordinates.map((c) => new THREE.Vector3(c.x, c.y, c.z));
+			const positions = Wire.curve(points, 4);
+			this.geometry.setPositions(positions);
+			this.computeLineDistances();
 		}
 	}
-
 
 	class LEDs extends THREE.Group {
 		/** @type {Array<LED>} */
 		leds;
 
-		constructor(leds) {
+		constructor(count) {
 			super();
-			this.leds = leds;
-			leds.forEach((led) => this.add(led));
+			this.leds = Array.from({ length: count }, () => new LED());
+			this.leds.forEach((led) => this.add(led));
 		}
 
 		get ledCount() {
 			return this.leds.length;
 		}
 
-		static of(coordinates) {
-			return new LEDs(coordinates.map((coordinate) => new LED(new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z))));
+		/**
+		 * @param {Array<{x: number, y: number, z: number}>} coordinates
+		 */
+		layout(coordinates) {
+			this.leds.forEach((led, i) => {
+				const coordinate = coordinates[i];
+				led.position.set(coordinate.x, coordinate.y, coordinate.z);
+			});
 		}
 	}
 
 	class LED extends THREE.Mesh {
 		static geometry = new THREE.SphereGeometry(0.015);
 
-		/**
-		 * @param {THREE.Vector3} position
-		 */
-		constructor(position) {
-			super(LED.geometry, LED.prepareMaterial());
-			this.position.copy(position);
-		}
-
-		static prepareMaterial() {
+		constructor() {
 			const color = new THREE.Color();
 			color.setHSL(Math.random(), 0.7, Math.random() * 0.2 + 0.05);
 
-			return new THREE.MeshStandardMaterial({
-				toneMapped: false,
-				emissive: color,
-				emissiveIntensity: 0,
-			});
+			super(
+				LED.geometry,
+				new THREE.MeshStandardMaterial({
+					toneMapped: false,
+					emissive: color,
+					emissiveIntensity: 0,
+				}),
+			);
 		}
 
 		get color() {
@@ -386,12 +399,39 @@
 		}
 	}
 
+	class Layout {
+		/**
+		 * @type {Array<{x: number, y: number, z: number}>}
+		 */
+		coordinates;
+
+		constructor(coordinates) {
+			this.coordinates = coordinates;
+			this.coordinates.forEach((c) => c.y *= 2);
+		}
+
+		/**
+		 * @param {Strip} strip
+		 */
+		apply(strip) {
+			strip.layout(this.coordinates);
+		}
+	}
+
 	function setupScene(scene) {
 		scene.clear();
 		createAxes().forEach((obj) => scene.add(obj));
 		scene.add(new THREE.AmbientLight(0x101010));
 		scene.add(buildBox());
-		startBuildLed(scene);
+		const strip = new Strip(
+			new Strand(new Wire(), new LEDs(100)),
+			new Strand(new Wire(), new LEDs(100)),
+		);
+		scene.add(strip);
+		loadLayout(strip, "layouts/christmas-2023-detailed3d.json")
+			.then(() => {
+				startMovie(strip, "movies/rainbow-simple.raw");
+			});
 	}
 
 	function buildBox() {
@@ -402,25 +442,20 @@
 		return new THREE.LineSegments(edges, material);
 	}
 
-	function startBuildLed(scene) {
-		fetch("layouts/christmas-2023-detailed3d.json")
+	/**
+	 * @param {Strip} strip
+	 * @param path
+	 * @return {Promise<void>}
+	 */
+	function loadLayout(strip, path) {
+		return fetch(path)
 			.then((response) => response.json())
 			.then((data) => {
-				const coordinates = data;
-				coordinates.forEach((c) => c.y *= 2);
-				let midPoint = coordinates.length / 2;
-				const strip = new Strip(
-					Strand.of(coordinates.slice(undefined, midPoint)),
-					Strand.of(coordinates.slice(midPoint, undefined)),
-				);
-				scene.add(strip);
+				const layout = new Layout(data);
+				layout.apply(strip);
 				main.render();
-				return strip;
 			})
-			.then((strip) => {
-				startMovie(strip, "movies/rainbow-simple.raw");
-			})
-		;
+			;
 	}
 
 	/**
