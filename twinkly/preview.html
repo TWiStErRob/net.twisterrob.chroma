@@ -51,15 +51,13 @@
 			document.body.appendChild(renderer.domElement);
 			this.renderer = renderer;
 
-			const camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 2000);
-			camera.position.set(0, 0, 200);
-			camera.lookAt(0, 0, 0);
-			this.camera = camera;
+			this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.01, 200);
 
-			const controls = new OrbitControls(camera, renderer.domElement);
-			controls.maxPolarAngle = Math.PI * 0.5;
+			const controls = new OrbitControls(this.camera, renderer.domElement);
+			controls.object.position.set(0, 1, 2);
+			controls.target = new THREE.Vector3(0, 1, 0);
 			controls.minDistance = 1;
-			controls.maxDistance = 1000;
+			controls.maxDistance = 10;
 			controls.addEventListener('change', () => this.render());
 
 			const scene = new THREE.Scene();
@@ -76,10 +74,10 @@
 				type: THREE.HalfFloatType,
 				format: THREE.RGBAFormat,
 				colorSpace: THREE.SRGBColorSpace,
+				samples: 8,
 			});
-			target.samples = 8;
 			const composer = new EffectComposer(renderer, target);
-			composer.addPass(new RenderPass(scene, camera));
+			composer.addPass(new RenderPass(scene, this.camera));
 			composer.addPass(new ShaderPass(GammaCorrectionShader));
 			composer.addPass(bloomPass);
 			this.composer = composer;
@@ -151,7 +149,7 @@
 	}
 
 	class Bulb {
-		static geometry = new THREE.SphereGeometry();
+		static geometry = new THREE.SphereGeometry(0.015);
 
 		constructor(position) {
 			const color = new THREE.Color();
@@ -160,7 +158,6 @@
 			this.material = new THREE.MeshBasicMaterial({ color: color });
 			this.sphere = new THREE.Mesh(Bulb.geometry, this.material);
 			this.sphere.position.set(position.x, position.y, position.z);
-			this.sphere.scale.setScalar(2);
 		}
 
 		get color() {
@@ -386,7 +383,6 @@
 
 		for (let i = 0; i < coordinates.length; i++) {
 			const position = new THREE.Vector3(coordinates[i].x, coordinates[i].y, coordinates[i].z);
-			position.multiplyScalar(100);
 			position.y *= 2;
 			let bulb = new Bulb(position);
 			scene.add(bulb.object);
