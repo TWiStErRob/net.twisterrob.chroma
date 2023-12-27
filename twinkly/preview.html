@@ -20,25 +20,10 @@
 	}
 </script>
 
-<script type="x-shader/x-vertex" id="vertexshader">
-	varying vec2 vUv;
-	void main() {
-		vUv = uv;
-		gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-	}
-</script>
-
-<script type="x-shader/x-fragment" id="fragmentshader">
-	uniform sampler2D baseTexture;
-	uniform sampler2D bloomTexture;
-	varying vec2 vUv;
-	void main() {
-		gl_FragColor = texture2D(baseTexture, vUv) + vec4(1.0) * texture2D(bloomTexture, vUv);
-	}
-</script>
-
 <script type="module">
 	import * as THREE from 'three';
+
+	THREE.ColorManagement.legacyMode = false;
 
 	import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
@@ -47,29 +32,22 @@
 	import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 	import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 	import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-	import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-
-	const BLOOM_SCENE = 1;
+	import { GammaCorrectionShader } from 'three/addons/shaders/GammaCorrectionShader.js';
 
 	class Main {
-		darkMaterial = new THREE.MeshBasicMaterial({ color: 'black' });
-		materials = {};
 		params = {
 			threshold: 0,
-			strength: 1.1,
+			strength: 1,
 			radius: 0,
-			exposure: 1.1,
+			exposure: 1,
 		};
 
 		init() {
-			const bloomLayer = new THREE.Layers();
-			bloomLayer.set(BLOOM_SCENE);
-			this.bloomLayer = bloomLayer;
-
 			const renderer = new THREE.WebGLRenderer({ antialias: true });
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setSize(window.innerWidth, window.innerHeight);
-			renderer.toneMapping = THREE.ReinhardToneMapping;
+			renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			renderer.outputColorSpace = THREE.SRGBColorSpace;
 			document.body.appendChild(renderer.domElement);
 			this.renderer = renderer;
 
@@ -87,41 +65,24 @@
 			const scene = new THREE.Scene();
 			setupScene(scene);
 			this.scene = scene;
-			const renderScene = new RenderPass(scene, camera);
 
-			const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight));
+			const bloomPass = new UnrealBloomPass();
 			bloomPass.threshold = this.params.threshold;
 			bloomPass.strength = this.params.strength;
 			bloomPass.radius = this.params.radius;
 			this.bloomPass = bloomPass;
 
-			const bloomComposer = new EffectComposer(renderer);
-			bloomComposer.renderToScreen = false;
-			bloomComposer.addPass(renderScene);
-			bloomComposer.addPass(bloomPass);
-			this.bloomComposer = bloomComposer;
-
-			const mixPass = new ShaderPass(
-				new THREE.ShaderMaterial({
-					uniforms: {
-						baseTexture: { value: null },
-						bloomTexture: { value: bloomComposer.renderTarget2.texture },
-					},
-					vertexShader: document.getElementById('vertexshader').textContent,
-					fragmentShader: document.getElementById('fragmentshader').textContent,
-					defines: {},
-				}),
-				'baseTexture',
-			);
-			mixPass.needsSwap = true;
-
-			const outputPass = new OutputPass();
-
-			const finalComposer = new EffectComposer(renderer);
-			finalComposer.addPass(renderScene);
-			finalComposer.addPass(mixPass);
-			finalComposer.addPass(outputPass);
-			this.finalComposer = finalComposer;
+			const target = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+				type: THREE.HalfFloatType,
+				format: THREE.RGBAFormat,
+				colorSpace: THREE.SRGBColorSpace,
+			});
+			target.samples = 8;
+			const composer = new EffectComposer(renderer, target);
+			composer.addPass(new RenderPass(scene, camera));
+			composer.addPass(new ShaderPass(GammaCorrectionShader));
+			composer.addPass(bloomPass);
+			this.composer = composer;
 
 			this.setupGui();
 		}
@@ -180,39 +141,18 @@
 			this.camera.updateProjectionMatrix();
 
 			this.renderer.setSize(width, height);
-
-			this.bloomComposer.setSize(width, height);
-			this.finalComposer.setSize(width, height);
-
+			this.composer.setSize(width, height);
 			this.render();
 		}
 
 		render() {
-			this.scene.traverse((obj) => this.darkenNonBloomed(obj));
-			this.bloomComposer.render();
-			this.scene.traverse((obj) => this.restoreMaterial(obj));
-
-			// render the entire scene, then render bloom scene on top
-			this.finalComposer.render();
-		}
-
-		darkenNonBloomed(obj) {
-			if (obj.isMesh && this.bloomLayer.test(obj.layers) === false) {
-				this.materials[obj.uuid] = obj.material;
-				obj.material = this.darkMaterial;
-			}
-		}
-
-		restoreMaterial(obj) {
-			if (this.materials[obj.uuid]) {
-				obj.material = this.materials[obj.uuid];
-				delete this.materials[obj.uuid];
-			}
+			this.composer.render();
 		}
 	}
 
 	class Bulb {
 		static geometry = new THREE.SphereGeometry();
+
 		constructor(position) {
 			const color = new THREE.Color();
 			color.setHSL(Math.random(), 0.7, Math.random() * 0.2 + 0.05);
@@ -226,6 +166,7 @@
 		get color() {
 			return this.material.color;
 		}
+
 		set color(value) {
 			this.material.color = value;
 		}
@@ -235,16 +176,10 @@
 		}
 
 		set bloom(value) {
-			if (value) {
-				this.sphere.layers.enable(BLOOM_SCENE);
-			} else {
-				this.sphere.layers.disable(BLOOM_SCENE);
-			}
 		}
 	}
 
 	function setupScene(scene) {
-		scene.traverse(disposeMaterial);
 		scene.children.length = 0;
 		const coordinates = [
 			{ x: 0.220093, y: 0.084900, z: 0.408569 },
@@ -456,12 +391,6 @@
 			let bulb = new Bulb(position);
 			scene.add(bulb.object);
 			bulb.bloom = Math.random() < 0.6;
-		}
-	}
-
-	function disposeMaterial(obj) {
-		if (obj.material) {
-			obj.material.dispose();
 		}
 	}
 
