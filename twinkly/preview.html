@@ -611,7 +611,10 @@
 				//strip.frame = Frame.random(strip.ledCount);
 				//strip.lit = true;
 				//main.render();
-				startMovie(strip, "movies/rainbow-simple.raw");
+
+				// startMovie(strip, "movies/rainbow-simple.raw");
+
+				generateRandomMovie(strip);
 			});
 	}
 
@@ -652,6 +655,23 @@
 				player.start();
 			})
 		;
+	}
+
+	function generateRandomMovie(strip) {
+		const player = new MoviePlayer(strip, main.render.bind(main), {
+			get fps() {
+				return 15;
+			},
+
+			get frameCount() {
+				return 100;
+			},
+
+			get(index) {
+				return Frame.random(strip.ledCount);
+			},
+		});
+		player.start();
 	}
 
 	function createAxes() {
