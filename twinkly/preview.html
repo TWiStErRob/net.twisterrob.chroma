@@ -223,6 +223,7 @@
 		{ x: 1.000000, y: 0.365356, z: -0.281006 },
 		{ x: 1.000000, y: 0.365356, z: -0.281006 },
 	];
+	coordinates.forEach((c) => c.y *= 2);
 </script>
 
 <script type="module">
@@ -239,6 +240,9 @@
 	import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 	import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 	import { GammaCorrectionShader } from 'three/addons/shaders/GammaCorrectionShader.js';
+	import { Line2 } from 'three/addons/lines/Line2.js';
+	import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+	import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 
 	class Main {
 		params = {
@@ -421,17 +425,37 @@
 
 	/**
 	 * @param {Array<{x,y,z}>} coordinates
-	 * @return {Array<LED>}
+	 * @return {Array<THREE.Object3D>}
 	 */
 	function buildLed(coordinates) {
+		/** @type {Array<THREE.Object3D>} */
 		const leds = coordinates.map((coordinate) => {
 			const position = new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z);
-			position.y *= 2;
 			let bulb = new LED(position);
 			bulb.lit = Math.random() < 0.6;
 			return bulb;
 		});
-		return leds;
+		return leds.concat(buildStrands(coordinates));
+	}
+
+	/**
+	 * @param {Array<{x,y,z}>} coordinates
+	 * @return {Array<THREE.Object3D>}
+	 */
+	function buildStrands(coordinates) {
+		const points = coordinates.flatMap((coordinate) => [ coordinate.x, coordinate.y, coordinate.z ]);
+		const geometry = new LineGeometry();
+		geometry.setPositions(points);
+
+		const matLine = new LineMaterial({
+			color: 0x080808,
+			linewidth: .001,
+		});
+
+		const line = new Line2(geometry, matLine);
+		line.computeLineDistances();
+		line.scale.set(1, 1, 1);
+		return [ line ];
 	}
 
 	function createAxes() {
