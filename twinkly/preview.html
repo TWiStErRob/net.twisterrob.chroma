@@ -286,7 +286,6 @@
 					linewidth: .001,
 				}),
 			);
-			this.scale.set(1, 1, 1);
 		}
 
 		/**
@@ -353,6 +352,9 @@
 		/** @type {number} */
 		index;
 
+		/**
+		 * @param {number} index
+		 */
 		constructor(index) {
 			if (!(index >= 0)) {
 				throw new Error(`Invalid index: ${index}.`);
@@ -368,26 +370,44 @@
 			this.index = index;
 		}
 
+		/**
+		 * @return {THREE.Color}
+		 */
 		get color() {
 			return this.material.emissive;
 		}
 
+		/**
+		 * @param {THREE.Color} value
+		 */
 		set color(value) {
 			this.material.emissive = value;
 		}
 
+		/**
+		 * @return {boolean}
+		 */
 		get lit() {
 			return this.material.emissiveIntensity > 0;
 		}
 
+		/**
+		 * @param {boolean} value
+		 */
 		set lit(value) {
 			this.material.emissiveIntensity = value? 1 : 0;
 		}
 
+		/**
+		 * @return {boolean}
+		 */
 		get highlight() {
 			return this.material.userData.preHighlightIntensity !== undefined;
 		}
 
+		/**
+		 * @param {boolean} value
+		 */
 		set highlight(value) {
 			if (value) {
 				this.material.userData.preHighlightIntensity = this.material.emissiveIntensity;
@@ -405,6 +425,9 @@
 		 */
 		coordinates;
 
+		/**
+		 * @param {Array<{x: number, y: number, z: number}>} coordinates
+		 */
 		constructor(coordinates) {
 			this.coordinates = coordinates;
 			this.coordinates.forEach((c) => c.y *= 2);
@@ -419,14 +442,25 @@
 	}
 
 	class Movie {
+
+		/**
+		 * @return {number}
+		 */
 		get fps() {
 			throw new Error("Abstract, not implemented.");
 		}
 
+		/**
+		 * @return {number}
+		 */
 		get frameCount() {
 			throw new Error("Abstract, not implemented.");
 		}
 
+		/**
+		 * @param {number} index
+		 * @return {Frame}
+		 */
 		get(index) {
 			throw new Error("Abstract, not implemented.");
 		}
@@ -527,6 +561,9 @@
 			return this.movie.get(this.index.current);
 		}
 
+		/**
+		 * @return {void}
+		 */
 		next() {
 			this.index.next();
 			this.strip.frame = this.current;
@@ -552,6 +589,9 @@
 		/** @type {number} */
 		frameCount;
 
+		/**
+		 * @param {number} frameCount
+		 */
 		constructor(frameCount) {
 			if (frameCount <= 0) {
 				throw new Error("Frame count must be positive.");
@@ -560,6 +600,9 @@
 			this.frameIndex = -1;
 		}
 
+		/**
+		 * @return {number}
+		 */
 		get current() {
 			if (this.frameIndex < 0) {
 				throw new Error("Not started.");
@@ -580,6 +623,9 @@
 		/** @type {Uint8Array} */
 		data;
 
+		/**
+		 * @param {Uint8Array} data
+		 */
 		constructor(data) {
 			this.data = data;
 		}
@@ -607,6 +653,9 @@
 		}
 	}
 
+	/**
+	 * @param {THREE.Scene} scene
+	 */
 	function setupScene(scene) {
 		scene.clear();
 		createAxes().forEach((obj) => scene.add(obj));
@@ -632,6 +681,9 @@
 			});
 	}
 
+	/**
+	 * @return {THREE.LineSegments}
+	 */
 	function buildBox() {
 		let geometry = new THREE.BoxGeometry(1, 1, 1);
 		geometry.translate(0, 0.5, 0);
@@ -671,6 +723,9 @@
 		;
 	}
 
+	/**
+	 * @param {Strip} strip
+	 */
 	function generateRandomMovie(strip) {
 		const player = new MoviePlayer(strip, main.render.bind(main), {
 			get fps() {
@@ -688,6 +743,12 @@
 		player.start();
 	}
 
+	/**
+	 * @param {THREE.Raycaster} raycaster
+	 * @param {THREE.Object3D} object
+	 * @param {THREE.Vector3} point
+	 * @return {boolean}
+	 */
 	function isInside(raycaster, object, point) {
 		raycaster.set(point, new THREE.Vector3(1, 1, 1));
 		const intersects = raycaster.intersectObject(object, false);
@@ -780,6 +841,11 @@
 		return result;
 	}
 
+	// TODO get and send to strip directly: https://xled-docs.readthedocs.io/en/latest/rest_api.html
+	/**
+	 * @param {string} fileName
+	 * @param {Uint8Array} byte
+	 */
 	function saveByteArray(fileName, byte) {
 		const link = document.createElement('a');
 		link.href = window.URL.createObjectURL(new Blob([ byte ], { type: "application/pdf" }));
@@ -787,6 +853,9 @@
 		link.click();
 	}
 
+	/**
+	 * @return {Array<THREE.AxesHelper>}
+	 */
 	function createAxes() {
 		let positive = new THREE.AxesHelper(2);
 		positive.material.transparent = true;
