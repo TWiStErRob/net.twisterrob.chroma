@@ -25,7 +25,7 @@
 
 <!--suppress JSUnusedGlobalSymbols -->
 <script type="text/babel" data-type="module" data-presets="flow">
-	// @flow
+	// Flow: https://github.com/niieani/typescript-vs-flowtype
 	import * as THREE from 'three';
 	// TODO Understand what's right: https://threejs.org/docs/#manual/en/introduction/Color-management
 	// Stop messing with my RGB values!
@@ -45,6 +45,7 @@
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 
 	type Coordinate = { x: number, y: number, z: number };
+	type TimeoutID = number;
 
 	class Main {
 		params = {
@@ -53,6 +54,12 @@
 			radius: 0,
 			exposure: 1,
 		};
+
+		renderer: THREE.WebGLRenderer;
+		camera: THREE.Camera;
+		scene: THREE.Scene;
+		bloomPass: UnrealBloomPass;
+		composer: EffectComposer;
 
 		init() {
 			const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -136,27 +143,27 @@
 		}
 
 		// noinspection JSUnusedLocalSymbols
-		onPointerDown(event) {
+		onPointerDown(event: PointerEvent) {
 			if (this.hoveredLED) {
 				this.hoveredLED.lit = !this.hoveredLED.lit;
 				this.render();
 			}
 		}
 
-		hoveredLED: ?LED = null;
+		hoveredLED: LED | null = null;
 
-		onPointerMove(event) {
+		onPointerMove(event: MouseEvent) {
 			const currentObject = this.cast(event);
 			if (this.hoveredLED === null && currentObject) {
 				this.onEnter(currentObject);
 				this.hoveredLED = currentObject;
 				this.render();
-			} else if (this.hoveredLED !== null && currentObject === null) {
+			} else if (this.hoveredLED !== null  && currentObject === null) {
 				const existingObject = this.hoveredLED;
 				this.hoveredLED = null;
 				this.onExit(existingObject);
 				this.render();
-			} else if (this.hoveredLED !== null && currentObject !== null && this.hoveredLED !== currentObject) {
+			} else if (this.hoveredLED !== null && currentObject && this.hoveredLED !== currentObject) {
 				const existingLED = this.hoveredLED;
 				this.hoveredLED = null;
 				this.onExit(existingLED);
@@ -176,7 +183,7 @@
 			led.highlight = false;
 		}
 
-		cast(event): ?LED {
+		cast(event: MouseEvent): LED | null {
 			const mouse = new THREE.Vector2(
 				(event.clientX / window.innerWidth) * 2 - 1,
 				-(event.clientY / window.innerHeight) * 2 + 1,
@@ -193,7 +200,7 @@
 			}
 		}
 
-		onResize(): void {
+		onResize() {
 			const width = window.innerWidth;
 			const height = window.innerHeight;
 
@@ -205,7 +212,7 @@
 			this.render();
 		}
 
-		render(): void {
+		render() {
 			this.composer.render();
 		}
 	}
@@ -227,11 +234,11 @@
 			return this.strands.flatMap((strand) => strand.leds);
 		}
 
-		set frame(frame: Frame): void {
+		set frame(frame: Frame) {
 			this.leds.forEach((led) => led.color = frame.get(led.index));
 		}
 
-		set lit(value: boolean): void {
+		set lit(value: boolean) {
 			this.leds.forEach((led) => led.lit = value);
 		}
 
@@ -286,7 +293,7 @@
 			const spline = new THREE.CatmullRomCurve3(points);
 			const divisions = Math.round(divide * points.length);
 			const point = new THREE.Vector3();
-			const positions = [];
+			const positions: Array<number> = [];
 			for (let i = 0, l = divisions; i < l; i++) {
 				const t = i / l;
 				spline.getPoint(t, point);
@@ -309,13 +316,13 @@
 	class LEDs extends THREE.Group {
 		leds: Array<LED>;
 
-		constructor(count, baseIndex) {
+		constructor(count: number, baseIndex: number) {
 			super();
 			this.leds = Array.from({ length: count }, (_, index) => new LED(baseIndex + index));
 			this.leds.forEach((led) => this.add(led));
 		}
 
-		get ledCount() {
+		get ledCount(): number {
 			return this.leds.length;
 		}
 
@@ -328,7 +335,7 @@
 	}
 
 	class LED extends THREE.Mesh {
-		static geometry = new THREE.SphereGeometry(0.015);
+		static geometry: THREE.SphereGeometry = new THREE.SphereGeometry(0.015);
 
 		index: number;
 
@@ -351,7 +358,7 @@
 			return this.material.emissive;
 		}
 
-		set color(value: THREE.Color): void {
+		set color(value: THREE.Color) {
 			this.material.emissive = value;
 		}
 
@@ -359,7 +366,7 @@
 			return this.material.emissiveIntensity > 0;
 		}
 
-		set lit(value: boolean): void {
+		set lit(value: boolean) {
 			this.material.emissiveIntensity = value? 1 : 0;
 		}
 
@@ -367,7 +374,7 @@
 			return this.material.userData.preHighlightIntensity !== undefined;
 		}
 
-		set highlight(value: boolean): void {
+		set highlight(value: boolean) {
 			if (value) {
 				this.material.userData.preHighlightIntensity = this.material.emissiveIntensity;
 				this.material.emissiveIntensity = 4;
@@ -383,7 +390,7 @@
 
 		constructor(coordinates: Array<Coordinate>) {
 			this.coordinates = coordinates;
-			this.coordinates.forEach((c) => c.y *= 2);
+			this.coordinates.forEach((c: Coordinate) => c.y *= 2);
 		}
 
 		apply(strip: Strip) {
@@ -401,21 +408,22 @@
 
 	class StaticMovie implements Movie {
 		frames: Array<Frame>;
+		_fps: number;
 
-		constructor(frames, fps) {
+		constructor(frames: Array<Frame>, fps: number) {
 			this._fps = fps;
 			this.frames = frames;
 		}
 
-		get fps() {
+		get fps(): number {
 			return this._fps;
 		}
 
-		get frameCount() {
+		get frameCount(): number {
 			return this.frames.length;
 		}
 
-		get(index) {
+		get(index: number): Frame {
 			if (index < 0 || index >= this.frames.length) {
 				throw new Error("Index out of bounds.");
 			}
@@ -430,7 +438,7 @@
 			this.colors = colors;
 		}
 
-		get(index): THREE.Color {
+		get(index: number): THREE.Color {
 			return this.colors[index];
 		}
 
@@ -451,7 +459,7 @@
 		movie: Movie;
 		index: FrameStepper;
 		strip: Strip;
-		running: ?number;
+		running: TimeoutID | undefined;
 		onNext: () => void;
 
 		constructor(strip: Strip, onNext: () => void, movie: Movie) {
@@ -465,19 +473,19 @@
 			return this.movie.get(this.index.current);
 		}
 
-		next(): void {
+		next() {
 			this.index.next();
 			this.strip.frame = this.current;
 			this.onNext();
 			this.running = setTimeout(() => this.next(), 1000 / this.movie.fps);
 		}
 
-		start(): void {
+		start() {
 			this.strip.lit = true;
 			this.next();
 		}
 
-		stop(): void {
+		stop() {
 			clearTimeout(this.running);
 			this.running = undefined;
 		}
@@ -536,7 +544,7 @@
 		}
 	}
 
-	function setupScene(scene: THREE.Scene): void {
+	function setupScene(scene: THREE.Scene) {
 		scene.clear();
 		createAxes().forEach((obj) => scene.add(obj));
 		scene.add(new THREE.AmbientLight(0x101010));
@@ -594,15 +602,15 @@
 	function generateRandomMovie(strip: Strip) {
 		// noinspection JSUnusedLocalSymbols
 		const player = new MoviePlayer(strip, main.render.bind(main), {
-			get fps() {
+			get fps(): number {
 				return 15;
 			},
 
-			get frameCount() {
+			get frameCount(): number {
 				return 100;
 			},
 
-			get(index) {
+			get(index: number): Frame {
 				return Frame.random(strip.ledCount);
 			},
 		});
@@ -615,7 +623,7 @@
 		return intersects.length % 2 === 1;
 	}
 
-	function generateHeartMovie(strip: Strip, scene: THREE.Scene): Frame {
+	function generateHeartMovie(strip: Strip, scene: THREE.Scene): Movie {
 		const heart = new THREE.Group();
 		const collision = new THREE.Mesh(
 			new THREE.SphereGeometry(0.60, 12, 12),
@@ -643,15 +651,15 @@
 		// mesh.visible = false;
 		scene.add(heart);
 		return {
-			get fps() {
+			get fps(): number {
 				return 40;
 			},
 
-			get frameCount() {
+			get frameCount(): number {
 				return 50;
 			},
 
-			get(index) {
+			get(index: number): Frame {
 				const frame = Frame.static(strip.ledCount, new THREE.Color(0xff7811));
 				const raycaster = new THREE.Raycaster();
 				const rMax = 0.65;
@@ -693,7 +701,7 @@
 	}
 
 	// TODO get and send to strip directly: https://xled-docs.readthedocs.io/en/latest/rest_api.html
-	function saveByteArray(fileName: string, byte: Uint8Array): void {
+	function saveByteArray(fileName: string, byte: Uint8Array) {
 		const link = document.createElement('a');
 		link.href = window.URL.createObjectURL(new Blob([ byte ], { type: "application/pdf" }));
 		link.download = fileName;
