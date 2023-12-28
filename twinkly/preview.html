@@ -11,6 +11,9 @@
 	</style>
 </head>
 <body>
+
+<script src="https://unpkg.com/@babel/standalone@7.23.6/babel.js"></script>
+
 <script type="importmap">
 	{
 		"imports": {
@@ -20,8 +23,8 @@
 	}
 </script>
 
-<script type="module">
-	"use strict";
+<script type="text/babel" data-type="module" data-presets="flow">
+	// @flow
 	import * as THREE from 'three';
 	// TODO Understand what's right: https://threejs.org/docs/#manual/en/introduction/Color-management
 	// Stop messing with my RGB values!
@@ -39,6 +42,8 @@
 	import { Line2 } from 'three/addons/lines/Line2.js';
 	import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+
+	type Coordinate = { x: number, y: number, z: number };
 
 	class Main {
 		params = {
@@ -136,8 +141,7 @@
 			}
 		}
 
-		/** @type {LED|null} */
-		hoveredLED = null;
+		hoveredLED: ?LED = null;
 
 		onPointerMove(event) {
 			const currentObject = this.cast(event);
@@ -160,19 +164,17 @@
 			}
 		}
 
-		/** @param led {LED} */
-		onEnter(led) {
+		onEnter(led: LED) {
 			//console.log("enter", object);
 			led.highlight = true;
 		}
 
-		/** @param led {LED} */
-		onExit(led) {
+		onExit(led: LED) {
 			//console.log("exit", object);
 			led.highlight = false;
 		}
 
-		cast(event) {
+		cast(event): ?LED {
 			const mouse = new THREE.Vector2(
 				(event.clientX / window.innerWidth) * 2 - 1,
 				-(event.clientY / window.innerHeight) * 2 + 1,
@@ -189,7 +191,7 @@
 			}
 		}
 
-		onResize() {
+		onResize(): void {
 			const width = window.innerWidth;
 			const height = window.innerHeight;
 
@@ -201,56 +203,46 @@
 			this.render();
 		}
 
-		render() {
+		render(): void {
 			this.composer.render();
 		}
 	}
 
 	class Strip extends THREE.Group {
-		/** @type {Array<Strand>} */
-		strands;
+		strands: Array<Strand>;
 
-		constructor(...strands) {
+		constructor(...strands: Array<Strand>) {
 			super();
 			this.strands = strands;
-			strands.forEach((strand) => this.add(strand));
+			strands.forEach((strand: Strand) => this.add(strand));
 		}
 
-		get ledCount() {
+		get ledCount(): number {
 			return this.strands.reduce((sum, strand) => sum + strand.ledCount, 0);
 		}
 
-		get leds() {
+		get leds(): Array<LED> {
 			return this.strands.flatMap((strand) => strand.leds);
 		}
 
-		/**
-		 * @param {Frame} frame
-		 */
-		set frame(frame) {
+		set frame(frame: Frame): void {
 			this.leds.forEach((led) => led.color = frame.get(led.index));
 		}
 
-		set lit(value) {
+		set lit(value: boolean): void {
 			this.leds.forEach((led) => led.lit = value);
 		}
 
-		/**
-		 * @param {Array<{x: number, y: number, z: number}>} coordinates
-		 */
-		layout(coordinates) {
+		layout(coordinates: Array<Coordinate>) {
 			this.strands.forEach((strand) => strand.layout(coordinates));
 		}
 	}
 
 	class Strand extends THREE.Group {
-		/** @type {Wire} */
-		wire;
+		wire: Wire;
+		lights: LEDs;
 
-		/** @type {LEDs} */
-		lights;
-
-		constructor(wire, lights) {
+		constructor(wire: Wire, lights: LEDs) {
 			super();
 			this.wire = wire;
 			this.lights = lights;
@@ -258,18 +250,15 @@
 			this.add(lights);
 		}
 
-		get ledCount() {
+		get ledCount(): number {
 			return this.lights.ledCount;
 		}
 
-		get leds() {
+		get leds(): Array<LED> {
 			return this.lights.leds;
 		}
 
-		/**
-		 * @param {Array<{x: number, y: number, z: number}>} coordinates
-		 */
-		layout(coordinates) {
+		layout(coordinates: Array<Coordinate>) {
 			this.lights.layout(coordinates);
 			this.wire.layout(this.lights, coordinates);
 		}
@@ -289,11 +278,9 @@
 		}
 
 		/**
-		 * @param {Array<THREE.Vector3>} points
-		 * @param {Number} divide
-		 * @return {Array<Number>} [x,y,z, x,y,z, ...]
+		 * @return [x,y,z, x,y,z, ...]
 		 */
-		static curve(points, divide) {
+		static curve(points: Array<THREE.Vector3>, divide: number): Array<number> {
 			const spline = new THREE.CatmullRomCurve3(points);
 			const divisions = Math.round(divide * points.length);
 			const point = new THREE.Vector3();
@@ -306,11 +293,7 @@
 			return positions;
 		}
 
-		/**
-		 * @param {LEDs} lights
-		 * @param {Array<{x: number, y: number, z: number}>} coordinates
-		 */
-		layout(lights, coordinates) {
+		layout(lights: LEDs, coordinates: Array<Coordinate>) {
 			const points = lights.leds.map((led) => {
 				const c = coordinates[led.index];
 				return new THREE.Vector3(c.x, c.y, c.z);
@@ -322,8 +305,7 @@
 	}
 
 	class LEDs extends THREE.Group {
-		/** @type {Array<LED>} */
-		leds;
+		leds: Array<LED>;
 
 		constructor(count, baseIndex) {
 			super();
@@ -335,10 +317,7 @@
 			return this.leds.length;
 		}
 
-		/**
-		 * @param {Array<{x: number, y: number, z: number}>} coordinates
-		 */
-		layout(coordinates) {
+		layout(coordinates: Array<Coordinate>) {
 			this.leds.forEach((led) => {
 				const coordinate = coordinates[led.index];
 				led.position.set(coordinate.x, coordinate.y, coordinate.z);
@@ -349,13 +328,9 @@
 	class LED extends THREE.Mesh {
 		static geometry = new THREE.SphereGeometry(0.015);
 
-		/** @type {number} */
-		index;
+		index: number;
 
-		/**
-		 * @param {number} index
-		 */
-		constructor(index) {
+		constructor(index: number) {
 			if (!(index >= 0)) {
 				throw new Error(`Invalid index: ${index}.`);
 			}
@@ -370,45 +345,27 @@
 			this.index = index;
 		}
 
-		/**
-		 * @return {THREE.Color}
-		 */
-		get color() {
+		get color(): THREE.Color {
 			return this.material.emissive;
 		}
 
-		/**
-		 * @param {THREE.Color} value
-		 */
-		set color(value) {
+		set color(value: THREE.Color): void {
 			this.material.emissive = value;
 		}
 
-		/**
-		 * @return {boolean}
-		 */
-		get lit() {
+		get lit(): boolean {
 			return this.material.emissiveIntensity > 0;
 		}
 
-		/**
-		 * @param {boolean} value
-		 */
-		set lit(value) {
+		set lit(value: boolean): void {
 			this.material.emissiveIntensity = value? 1 : 0;
 		}
 
-		/**
-		 * @return {boolean}
-		 */
-		get highlight() {
+		get highlight(): boolean {
 			return this.material.userData.preHighlightIntensity !== undefined;
 		}
 
-		/**
-		 * @param {boolean} value
-		 */
-		set highlight(value) {
+		set highlight(value: boolean): void {
 			if (value) {
 				this.material.userData.preHighlightIntensity = this.material.emissiveIntensity;
 				this.material.emissiveIntensity = 4;
@@ -420,58 +377,30 @@
 	}
 
 	class Layout {
-		/**
-		 * @type {Array<{x: number, y: number, z: number}>}
-		 */
-		coordinates;
+		coordinates: Array<Coordinate>;
 
-		/**
-		 * @param {Array<{x: number, y: number, z: number}>} coordinates
-		 */
-		constructor(coordinates) {
+		constructor(coordinates: Array<Coordinate>) {
 			this.coordinates = coordinates;
 			this.coordinates.forEach((c) => c.y *= 2);
 		}
 
-		/**
-		 * @param {Strip} strip
-		 */
-		apply(strip) {
+		apply(strip: Strip) {
 			strip.layout(this.coordinates);
 		}
 	}
 
-	class Movie {
+	interface Movie {
+		get fps(): number;
 
-		/**
-		 * @return {number}
-		 */
-		get fps() {
-			throw new Error("Abstract, not implemented.");
-		}
+		get frameCount(): number;
 
-		/**
-		 * @return {number}
-		 */
-		get frameCount() {
-			throw new Error("Abstract, not implemented.");
-		}
-
-		/**
-		 * @param {number} index
-		 * @return {Frame}
-		 */
-		get(index) {
-			throw new Error("Abstract, not implemented.");
-		}
+		get(index: number): Frame;
 	}
 
-	class StaticMovie extends Movie {
-		/** @type {Array<Frame>} */
-		frames;
+	class StaticMovie implements Movie {
+		frames: Array<Frame>;
 
 		constructor(frames, fps) {
-			super();
 			this._fps = fps;
 			this.frames = frames;
 		}
@@ -493,31 +422,21 @@
 	}
 
 	class Frame {
-		/** @type {Array<THREE.Color>} */
-		colors;
+		colors: Array<THREE.Color>;
 
-		constructor(colors) {
+		constructor(colors: Array<THREE.Color>) {
 			this.colors = colors;
 		}
 
-		get(index) {
+		get(index): THREE.Color {
 			return this.colors[index];
 		}
 
-		/**
-		 * @param {number} ledCount
-		 * @param {THREE.Color} color
-		 * @return {Frame}
-		 */
-		static static(ledCount, color) {
+		static static(ledCount: number, color: THREE.Color): Frame {
 			return new Frame(Array.from({ length: ledCount }, () => color.clone()));
 		}
 
-		/**
-		 * @param {number} ledCount
-		 * @return {Frame}
-		 */
-		static random(ledCount) {
+		static random(ledCount: number): Frame {
 			return new Frame(Array.from({ length: ledCount }, (_, index) => {
 				const color = new THREE.Color();
 				color.setHSL(Math.random(), 0.7, Math.random() * 0.2 + 0.05);
@@ -527,72 +446,46 @@
 	}
 
 	class MoviePlayer {
-		/** @type {Movie} */
-		movie;
+		movie: Movie;
+		index: FrameStepper;
+		strip: Strip;
+		running: ?number;
+		onNext: () => void;
 
-		/** @type {FrameStepper} */
-		index;
-
-		/** @type {Strip} */
-		strip;
-
-		/** @type {number|undefined} */
-		running;
-
-		/** @type {function} */
-		onNext;
-
-		/**
-		 * @param {Strip} strip
-		 * @param {function} onNext
-		 * @param {Movie} movie
-		 */
-		constructor(strip, onNext, movie) {
+		constructor(strip: Strip, onNext: () => void, movie: Movie) {
 			this.movie = movie;
 			this.onNext = onNext;
 			this.index = new FrameStepper(movie.frameCount);
 			this.strip = strip;
 		}
 
-		/**
-		 * @return {Frame}
-		 */
-		get current() {
+		get current(): Frame {
 			return this.movie.get(this.index.current);
 		}
 
-		/**
-		 * @return {void}
-		 */
-		next() {
+		next(): void {
 			this.index.next();
 			this.strip.frame = this.current;
 			this.onNext();
 			this.running = setTimeout(() => this.next(), 1000 / this.movie.fps);
 		}
 
-		start() {
+		start(): void {
 			this.strip.lit = true;
 			this.next();
 		}
 
-		stop() {
+		stop(): void {
 			clearTimeout(this.running);
 			this.running = undefined;
 		}
 	}
 
 	class FrameStepper {
-		/** @type {number} */
-		frameIndex;
+		frameIndex: number;
+		frameCount: number;
 
-		/** @type {number} */
-		frameCount;
-
-		/**
-		 * @param {number} frameCount
-		 */
-		constructor(frameCount) {
+		constructor(frameCount: number) {
 			if (frameCount <= 0) {
 				throw new Error("Frame count must be positive.");
 			}
@@ -600,40 +493,27 @@
 			this.frameIndex = -1;
 		}
 
-		/**
-		 * @return {number}
-		 */
-		get current() {
+		get current(): number {
 			if (this.frameIndex < 0) {
 				throw new Error("Not started.");
 			}
 			return this.frameIndex;
 		}
 
-		/**
-		 * @return {number}
-		 */
-		next() {
+		next(): number {
 			this.frameIndex = (this.frameIndex + 1) % this.frameCount;
 			return this.frameIndex;
 		}
 	}
 
 	class RawMovie {
-		/** @type {Uint8Array} */
-		data;
+		data: Uint8Array;
 
-		/**
-		 * @param {Uint8Array} data
-		 */
-		constructor(data) {
+		constructor(data: Uint8Array) {
 			this.data = data;
 		}
 
-		/**
-		 * @return {StaticMovie}
-		 */
-		toMovie(ledCount, fps) {
+		toMovie(ledCount: number, fps: number): StaticMovie {
 			const frameSize = 3 * ledCount;
 			const frameCount = this.data.length / frameSize;
 			return new StaticMovie(
@@ -653,10 +533,7 @@
 		}
 	}
 
-	/**
-	 * @param {THREE.Scene} scene
-	 */
-	function setupScene(scene) {
+	function setupScene(scene: THREE.Scene): void {
 		scene.clear();
 		createAxes().forEach((obj) => scene.add(obj));
 		scene.add(new THREE.AmbientLight(0x101010));
@@ -681,10 +558,7 @@
 			});
 	}
 
-	/**
-	 * @return {THREE.LineSegments}
-	 */
-	function buildBox() {
+	function buildBox(): THREE.LineSegments {
 		let geometry = new THREE.BoxGeometry(1, 1, 1);
 		geometry.translate(0, 0.5, 0);
 		let edges = new THREE.EdgesGeometry(geometry);
@@ -692,12 +566,7 @@
 		return new THREE.LineSegments(edges, material);
 	}
 
-	/**
-	 * @param {Strip} strip
-	 * @param path
-	 * @return {Promise<void>}
-	 */
-	function loadLayout(strip, path) {
+	function loadLayout(strip: Strip, path: string): Promise<void> {
 		return fetch(path)
 			.then((response) => response.json())
 			.then((data) => {
@@ -708,11 +577,7 @@
 			;
 	}
 
-	/**
-	 * @param {Strip} strip
-	 * @param {string} path
-	 */
-	function startMovie(strip, path) {
+	function startMovie(strip: Strip, path: string) {
 		fetch(path)
 			.then((response) => response.arrayBuffer())
 			.then((data) => {
@@ -723,10 +588,7 @@
 		;
 	}
 
-	/**
-	 * @param {Strip} strip
-	 */
-	function generateRandomMovie(strip) {
+	function generateRandomMovie(strip: Strip) {
 		const player = new MoviePlayer(strip, main.render.bind(main), {
 			get fps() {
 				return 15;
@@ -743,24 +605,13 @@
 		player.start();
 	}
 
-	/**
-	 * @param {THREE.Raycaster} raycaster
-	 * @param {THREE.Object3D} object
-	 * @param {THREE.Vector3} point
-	 * @return {boolean}
-	 */
-	function isInside(raycaster, object, point) {
+	function isInside(raycaster: THREE.Raycaster, object: THREE.Object3D, point: THREE.Vector3): boolean {
 		raycaster.set(point, new THREE.Vector3(1, 1, 1));
 		const intersects = raycaster.intersectObject(object, false);
 		return intersects.length % 2 === 1;
 	}
 
-	/**
-	 * @param {Strip} strip
-	 * @param {THREE.Scene} scene
-	 * @return {Frame}
-	 */
-	function generateHeartMovie(strip, scene) {
+	function generateHeartMovie(strip: Strip, scene: THREE.Scene): Frame {
 		const heart = new THREE.Group();
 		const collision = new THREE.Mesh(
 			new THREE.SphereGeometry(0.60, 12, 12),
@@ -823,11 +674,7 @@
 		return movie;
 	}
 
-	/**
-	 * @param {Movie} movie
-	 * @return {Uint8Array}
-	 */
-	function toRaw(movie) {
+	function toRaw(movie: Movie): Uint8Array {
 		const result = new Uint8Array(movie.frameCount * movie.get(0).colors.length * 3);
 		for (let i = 0; i < movie.frameCount; i++) {
 			const frame = movie.get(i);
@@ -842,21 +689,14 @@
 	}
 
 	// TODO get and send to strip directly: https://xled-docs.readthedocs.io/en/latest/rest_api.html
-	/**
-	 * @param {string} fileName
-	 * @param {Uint8Array} byte
-	 */
-	function saveByteArray(fileName, byte) {
+	function saveByteArray(fileName: string, byte: Uint8Array): void {
 		const link = document.createElement('a');
 		link.href = window.URL.createObjectURL(new Blob([ byte ], { type: "application/pdf" }));
 		link.download = fileName;
 		link.click();
 	}
 
-	/**
-	 * @return {Array<THREE.AxesHelper>}
-	 */
-	function createAxes() {
+	function createAxes(): Array<THREE.AxesHelper> {
 		let positive = new THREE.AxesHelper(2);
 		positive.material.transparent = true;
 		positive.material.opacity = .01;
