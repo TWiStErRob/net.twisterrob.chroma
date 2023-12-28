@@ -23,6 +23,7 @@
 	}
 </script>
 
+<!--suppress JSUnusedGlobalSymbols -->
 <script type="text/babel" data-type="module" data-presets="flow">
 	// @flow
 	import * as THREE from 'three';
@@ -134,6 +135,7 @@
 			});
 		}
 
+		// noinspection JSUnusedLocalSymbols
 		onPointerDown(event) {
 			if (this.hoveredLED) {
 				this.hoveredLED.lit = !this.hoveredLED.lit;
@@ -437,7 +439,7 @@
 		}
 
 		static random(ledCount: number): Frame {
-			return new Frame(Array.from({ length: ledCount }, (_, index) => {
+			return new Frame(Array.from({ length: ledCount }, () => {
 				const color = new THREE.Color();
 				color.setHSL(Math.random(), 0.7, Math.random() * 0.2 + 0.05);
 				return color;
@@ -520,6 +522,7 @@
 				Array.from({ length: frameCount }, (_, index) => {
 					const rgbs = this.data.slice(index * frameSize, (index + 1) * frameSize);
 					const colors = Array.from({ length: ledCount }, (_, index) => {
+						// noinspection PointlessArithmeticExpressionJS
 						return new THREE.Color(
 							rgbs[index * 3 + 0] / 255.0,
 							rgbs[index * 3 + 1] / 255.0,
@@ -589,6 +592,7 @@
 	}
 
 	function generateRandomMovie(strip: Strip) {
+		// noinspection JSUnusedLocalSymbols
 		const player = new MoviePlayer(strip, main.render.bind(main), {
 			get fps() {
 				return 15;
@@ -638,7 +642,7 @@
 		heart.position.set(0, 0.6, 0);
 		// mesh.visible = false;
 		scene.add(heart);
-		const movie = {
+		return {
 			get fps() {
 				return 40;
 			},
@@ -671,7 +675,6 @@
 				return frame;
 			},
 		};
-		return movie;
 	}
 
 	function toRaw(movie: Movie): Uint8Array {
@@ -680,6 +683,7 @@
 			const frame = movie.get(i);
 			for (let c = 0; c < frame.colors.length; c++) {
 				const color = frame.colors[c];
+				// noinspection PointlessArithmeticExpressionJS
 				result[(i * frame.colors.length + c) * 3 + 0] = Math.round(color.r * 255);
 				result[(i * frame.colors.length + c) * 3 + 1] = Math.round(color.g * 255);
 				result[(i * frame.colors.length + c) * 3 + 2] = Math.round(color.b * 255);
