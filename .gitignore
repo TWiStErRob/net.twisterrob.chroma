@@ -2,3 +2,4 @@
 !/.idea/runConfigurations/
 build/
 .gradle/
+/temp/
