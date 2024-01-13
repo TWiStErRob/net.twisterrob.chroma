@@ -10,7 +10,7 @@ pluginManagement {
 
 plugins {
 	id("net.twisterrob.gradle.plugin.nagging") version "0.16"
-	id("org.gradle.toolchains.foojay-resolver-convention") version("0.7.0")
+	id("org.gradle.toolchains.foojay-resolver-convention") version("0.8.0")
 }
 
 dependencyResolutionManagement {
