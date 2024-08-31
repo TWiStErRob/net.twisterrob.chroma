@@ -83,7 +83,6 @@ if ((System.getProperty("idea.version") ?: "") < "2023.3") {
 // TODEL Gradle 8.2 sync in IDEA 2023.1 https://youtrack.jetbrains.com/issue/IDEA-320307.
 @Suppress("MaxLineLength", "StringLiteralDuplication")
 if ((System.getProperty("idea.version") ?: "") < "2024.1") {
-	@Suppress("MaxLineLength", "StringLiteralDuplication")
 	doNotNagAbout(
 		"The BuildIdentifier.getName() method has been deprecated. " +
 				"This is scheduled to be removed in Gradle 9.0. " +
@@ -92,6 +91,29 @@ if ((System.getProperty("idea.version") ?: "") < "2024.1") {
 				"https://docs.gradle.org/${gradleVersion}/userguide/upgrading_version_8.html#build_identifier_name_and_current_deprecation",
 		// There are 4 stack traces coming to this line, ignore them all at once.
 		"at org.jetbrains.plugins.gradle.tooling.util.resolve.DependencyResolverImpl.resolveDependencies(DependencyResolverImpl.java:266)"
+	)
+} else {
+	logger.warn("IDEA version changed, please review hack.")
+}
+
+// TODEL Gradle 8.8 sync in IDEA 2024.1.4 https://youtrack.jetbrains.com/issue/IDEA-353787.
+@Suppress("MaxLineLength", "StringLiteralDuplication")
+if ((System.getProperty("idea.version") ?: "") < "2024.2") {
+	doNotNagAbout(
+		"The CopyProcessingSpec.getFileMode() method has been deprecated. " +
+				"This is scheduled to be removed in Gradle 9.0. " +
+				"Please use the getFilePermissions() method instead. " +
+				"Consult the upgrading guide for further information: " +
+				"https://docs.gradle.org/${gradleVersion}/userguide/upgrading_version_8.html#unix_file_permissions_deprecated",
+		"at com.intellij.gradle.toolingExtension.impl.model.resourceFilterModel.GradleResourceFilterModelBuilder.getFilters(GradleResourceFilterModelBuilder.groovy:46)"
+	)
+	doNotNagAbout(
+		"The CopyProcessingSpec.getDirMode() method has been deprecated. " +
+				"This is scheduled to be removed in Gradle 9.0. " +
+				"Please use the getDirPermissions() method instead. " +
+				"Consult the upgrading guide for further information: " +
+				"https://docs.gradle.org/8.9/userguide/upgrading_version_8.html#unix_file_permissions_deprecated",
+		"at com.intellij.gradle.toolingExtension.impl.model.resourceFilterModel.GradleResourceFilterModelBuilder.getFilters(GradleResourceFilterModelBuilder.groovy:46)"
 	)
 } else {
 	logger.warn("IDEA version changed, please review hack.")
