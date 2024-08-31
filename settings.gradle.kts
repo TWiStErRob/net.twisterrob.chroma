@@ -42,7 +42,7 @@ if ((System.getProperty("idea.version") ?: "") < "2024.2") {
 				"This is scheduled to be removed in Gradle 9.0. " +
 				"Please use the getDirPermissions() method instead. " +
 				"Consult the upgrading guide for further information: " +
-				"https://docs.gradle.org/8.9/userguide/upgrading_version_8.html#unix_file_permissions_deprecated",
+				"https://docs.gradle.org/${gradleVersion}/userguide/upgrading_version_8.html#unix_file_permissions_deprecated",
 		"at com.intellij.gradle.toolingExtension.impl.model.resourceFilterModel.GradleResourceFilterModelBuilder.getFilters(GradleResourceFilterModelBuilder.groovy:46)"
 	)
 } else {
