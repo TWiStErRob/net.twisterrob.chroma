@@ -3,7 +3,7 @@ idea = "2022.1.2"
 intellij = "1.17.4"
 java = "11"
 kotlin = "2.0.21"
-ktor = "2.3.12"
+ktor = "3.0.0"
 junit-jupiter = "5.11.2"
 junit-platform = "1.11.2"
 
