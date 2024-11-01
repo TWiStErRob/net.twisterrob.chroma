@@ -37,15 +37,15 @@ class ChromaRestClient(
 ) : Closeable {
 
 	private val client = HttpClient {
-		install(ContentNegotiation) {
-			install(Logging) {
-				logger = object : Logger {
-					override fun log(message: String) {
-						println(message)
-					}
+		install(Logging) {
+			logger = object : Logger {
+				override fun log(message: String) {
+					println(message)
 				}
-				level = LogLevel.ALL
 			}
+			level = LogLevel.ALL
+		}
+		install(ContentNegotiation) {
 			jackson {
 				configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 			}
