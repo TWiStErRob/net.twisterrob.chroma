@@ -1,3 +1,5 @@
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+
 plugins {
 	id("net.twisterrob.chroma.plugins.idea")
 }
@@ -27,17 +29,14 @@ test {
 	useJUnitPlatform()
 }
 
-runPluginVerifier {
-	ideVersions = [
-			// Android Studio: Giraffe
-			"IC-2022.3.1",
-			// Android Studio: Flamingo
-			"IC-2022.2.1",
-			// Android Studio: Electric Eel
-			"IC-2022.1.1",
-			// Android Studio: Dolphin
-			"IC-2021.3.1",
-	]
-	//noinspection UnnecessaryQualifiedReference TODEL https://github.com/JetBrains/gradle-intellij-plugin/issues/1323
-	failureLevel = EnumSet.allOf(org.jetbrains.intellij.tasks.RunPluginVerifierTask.FailureLevel.class)
+intellijPlatform {
+	pluginVerification {
+		failureLevel = org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.ALL
+		ides {
+			ide(IntelliJPlatformType.IntellijIdeaCommunity, "IC-2022.3.1") // Android Studio: Giraffe
+			ide(IntelliJPlatformType.IntellijIdeaCommunity, "IC-2022.2.1") // Android Studio: Flamingo
+			ide(IntelliJPlatformType.IntellijIdeaCommunity, "IC-2022.1.1") // Android Studio: Electric Eel
+			ide(IntelliJPlatformType.IntellijIdeaCommunity, "IC-2021.3.1") // Android Studio: Dolphin
+		}
+	}
 }
