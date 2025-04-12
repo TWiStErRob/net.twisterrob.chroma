@@ -1,5 +1,6 @@
 import net.twisterrob.gradle.doNotNagAbout
 import net.twisterrob.gradle.settings.enableFeaturePreviewQuietly
+import org.jetbrains.intellij.platform.gradle.extensions.intellijPlatform
 
 // TODEL https://github.com/gradle/gradle/issues/18971
 rootProject.name = "net-twisterrob-chroma"
@@ -10,13 +11,18 @@ pluginManagement {
 
 plugins {
 	id("net.twisterrob.gradle.plugin.nagging") version "0.17"
-	id("org.gradle.toolchains.foojay-resolver-convention") version("0.10.0")
+	id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
+	id("org.jetbrains.intellij.platform.settings") version "2.5.0"
 }
 
 dependencyResolutionManagement {
-	// TODO enable this once https://github.com/JetBrains/gradle-intellij-plugin/issues/1312 is resolved
-	// For now, repositories are in gradle/plugins.
-	//repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+	repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+	repositories {
+		mavenCentral()
+		intellijPlatform {
+			defaultRepositories()
+		}
+	}
 }
 
 enableFeaturePreviewQuietly("TYPESAFE_PROJECT_ACCESSORS", "Type-safe project accessors")
