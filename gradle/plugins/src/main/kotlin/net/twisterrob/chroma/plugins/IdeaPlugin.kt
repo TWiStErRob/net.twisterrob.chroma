@@ -17,9 +17,11 @@ class IdeaPlugin : Plugin<Project> {
 		target.plugins.apply(target.libs.plugins.intellij.get().pluginId)
 		target.intellijPlatform.apply {
 			pluginConfiguration {
-				version = target.libs.versions.idea
 				name = "Show Shortcuts with Razer Chroma"
 			}
+		}
+		target.dependencies.intellijPlatform.apply {
+			intellijIdeaCommunity(target.libs.versions.idea)
 		}
 		target.tasks.named<RunIdeTask>("runIde").configure {
 			systemProperty(
