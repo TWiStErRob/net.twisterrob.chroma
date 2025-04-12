@@ -33,10 +33,10 @@ intellijPlatform {
 	pluginVerification {
 		failureLevel = org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.ALL
 		ides {
-			ide(IntelliJPlatformType.IntellijIdeaCommunity, "IC-2022.3.1") // Android Studio: Giraffe
-			ide(IntelliJPlatformType.IntellijIdeaCommunity, "IC-2022.2.1") // Android Studio: Flamingo
-			ide(IntelliJPlatformType.IntellijIdeaCommunity, "IC-2022.1.1") // Android Studio: Electric Eel
-			ide(IntelliJPlatformType.IntellijIdeaCommunity, "IC-2021.3.1") // Android Studio: Dolphin
+			ide(IntelliJPlatformType.IntellijIdeaCommunity, "2022.3.1") // Android Studio: Giraffe
+			ide(IntelliJPlatformType.IntellijIdeaCommunity, "2022.2.1") // Android Studio: Flamingo
+			ide(IntelliJPlatformType.IntellijIdeaCommunity, "2022.1.1") // Android Studio: Electric Eel
+			ide(IntelliJPlatformType.IntellijIdeaCommunity, "2021.3.1") // Android Studio: Dolphin
 		}
 	}
 }
