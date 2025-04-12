@@ -18,6 +18,7 @@ class IdeaPlugin : Plugin<Project> {
 		target.intellijPlatform.apply {
 			pluginConfiguration {
 				name = "Show Shortcuts with Razer Chroma"
+				version = target.libs.versions.product
 			}
 		}
 		target.dependencies.intellijPlatform.apply {

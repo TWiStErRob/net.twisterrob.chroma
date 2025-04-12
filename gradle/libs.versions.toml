@@ -1,4 +1,5 @@
 [versions]
+product = "0.1"
 idea = "2022.1.2"
 intellij = "2.5.0"
 java = "11"
