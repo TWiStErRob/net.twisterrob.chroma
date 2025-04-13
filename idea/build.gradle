@@ -30,6 +30,11 @@ tasks.test {
 	useJUnitPlatform()
 }
 
+tasks.runIde {
+	def testProject = file("testProject") 
+	argumentProviders.add({ [ testProject.absolutePath ] } as CommandLineArgumentProvider)
+}
+
 intellijPlatform {
 	pluginVerification {
 		failureLevel = FailureLevel.ALL
