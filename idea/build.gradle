@@ -35,9 +35,7 @@ intellijPlatform {
 		failureLevel = FailureLevel.ALL
 		ides {
 			ide(IntelliJPlatformType.IntellijIdeaCommunity, "2022.3.1") // Android Studio: Giraffe
-			ide(IntelliJPlatformType.IntellijIdeaCommunity, "2022.2.1") // Android Studio: Flamingo
-			ide(IntelliJPlatformType.IntellijIdeaCommunity, "2022.1.1") // Android Studio: Electric Eel
-			ide(IntelliJPlatformType.IntellijIdeaCommunity, "2021.3.1") // Android Studio: Dolphin
+			ide(IntelliJPlatformType.IntellijIdeaCommunity, "2024.3.1") // Android Studio: Meerkat
 		}
 	}
 }
