@@ -20,6 +20,7 @@ class IdeaPlugin : Plugin<Project> {
 				name = "Show Shortcuts with Razer Chroma"
 				version = target.libs.versions.product
 			}
+			buildSearchableOptions = false
 		}
 		target.dependencies.intellijPlatform.apply {
 			intellijIdeaCommunity(target.libs.versions.idea)
