@@ -1,39 +1,29 @@
 package net.twisterrob.chroma.plugins
 
 import net.twisterrob.chroma.plugins.internal.KotlinPlugin
-import net.twisterrob.chroma.plugins.internal.intellij
+import net.twisterrob.chroma.plugins.internal.intellijPlatform
 import net.twisterrob.chroma.plugins.internal.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
-import org.jetbrains.intellij.tasks.BuildSearchableOptionsTask
-import org.jetbrains.intellij.tasks.JarSearchableOptionsTask
-import org.jetbrains.intellij.tasks.PatchPluginXmlTask
-import org.jetbrains.intellij.tasks.RunIdeTask
-import org.jetbrains.kotlin.gradle.utils.named
+import org.gradle.kotlin.dsl.assign
+import org.gradle.kotlin.dsl.named
+import org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask
 
 class IdeaPlugin : Plugin<Project> {
 
 	override fun apply(target: Project) {
 		target.plugins.apply(KotlinPlugin::class)
 		target.plugins.apply(target.libs.plugins.intellij.get().pluginId)
-		target.intellij.apply {
-			version.set(target.libs.versions.idea)
-			pluginName.set("Show Shortcuts with Razer Chroma")
-			updateSinceUntilBuild.set(false)
+		target.intellijPlatform.apply {
+			pluginConfiguration {
+				name = "Show Shortcuts with Razer Chroma"
+				version = target.libs.versions.product
+			}
+			buildSearchableOptions = false
 		}
-		target.tasks.named<PatchPluginXmlTask>("patchPluginXml").configure {
-			version.set(target.intellij.version)
-		}
-		// > Task :idea:jarSearchableOptions
-		// [gradle-intellij-plugin :idea idea:idea:jarSearchableOptions] No searchable options found.
-		// If plugin is not supposed to provide custom settings exposed in UI, disable building searchable options to decrease the build time.
-		// See: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin-faq.html#how-to-disable-building-searchable-options
-		target.tasks.named<BuildSearchableOptionsTask>("buildSearchableOptions").configure {
-			enabled = false
-		}
-		target.tasks.named<JarSearchableOptionsTask>("jarSearchableOptions").configure {
-			enabled = false
+		target.dependencies.intellijPlatform.apply {
+			intellijIdeaCommunity(target.libs.versions.idea)
 		}
 		target.tasks.named<RunIdeTask>("runIde").configure {
 			systemProperty(

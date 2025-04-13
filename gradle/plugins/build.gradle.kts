@@ -1,3 +1,5 @@
+import org.gradle.api.provider.Provider
+
 plugins {
 	`kotlin-dsl`
 }
@@ -7,8 +9,8 @@ repositories {
 }
 
 dependencies {
-	api(libs.kotlin.gradle)
-	api(libs.intellij.gradle)
+	api(plugin(libs.plugins.kotlin))
+	api(plugin(libs.plugins.intellij))
 
 	// TODEL https://github.com/gradle/gradle/issues/15383
 	implementation(files(libs::class.java.superclass.protectionDomain.codeSource.location))
@@ -26,3 +28,6 @@ gradlePlugin {
 		}
 	}
 }
+
+fun DependencyHandlerScope.plugin(plugin: Provider<PluginDependency>): Provider<String> =
+	plugin.map { "${it.pluginId}:${it.pluginId}.gradle.plugin:${it.version}" }
