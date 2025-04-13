@@ -1,5 +1,12 @@
+# IDEA
 /.idea/
 !/.idea/runConfigurations/
+
+# Gradle
 build/
 .gradle/
+.kotlin/
+.intellijPlatform/
+
+# Other
 /temp/
