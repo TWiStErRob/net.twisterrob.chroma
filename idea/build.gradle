@@ -18,6 +18,9 @@ dependencies {
 		// at io.ktor.client.HttpClientJvmKt.HttpClient(HttpClientJvm.kt:21)
 		// at net.twisterrob.chroma.razer.rest.ChromaRestClient.<init>(ChromaRestClient.kt:39)
 		exclude(group: "org.slf4j", module: "slf4j-api")
+		// https://plugins.jetbrains.com/docs/intellij/using-kotlin.html#coroutinesLibraries
+		// > Plugins must always use the bundled library from the target IDE and not bundle their own version.
+		exclude(group: "org.jetbrains.kotlinx", module: "kotlinx-coroutines-core")
 	}
 
 	testImplementation(libs.test.jupiter.api)
