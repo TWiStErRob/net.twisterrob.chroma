@@ -6,7 +6,7 @@ java = "11"
 kotlin = "2.1.20"
 ktor = "3.2.0"
 junit-jupiter = "5.13.1"
-junit-platform = "1.13.1"
+junit-platform = "1.13.2"
 
 [libraries]
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
