@@ -78,8 +78,7 @@ doNotNagAbout(
 				"Please use single-string notation instead: " +
 				"\"com.jetbrains.intellij.java:java-compiler-ant-tasks\". " +
 				"Consult the upgrading guide for further information: " +
-				"https://docs.gradle.org/${gradleVersion}/userguide/upgrading_version_9.html#dependency_multi_string_notation"
-				,
+				"https://docs.gradle.org/${gradleVersion}/userguide/upgrading_version_9.html#dependency_multi_string_notation",
 	//"at org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformDependenciesHelper.createDependency(IntelliJPlatformDependenciesHelper.kt:1355)",
 )
 
