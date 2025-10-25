@@ -23,7 +23,7 @@ class IdeaPlugin : Plugin<Project> {
 			buildSearchableOptions = false
 		}
 		target.dependencies.intellijPlatform.apply {
-			intellijIdeaCommunity(target.libs.versions.idea)
+			intellijIdea(target.libs.versions.idea)
 		}
 		target.tasks.named<RunIdeTask>("runIde").configure {
 			systemProperty(
