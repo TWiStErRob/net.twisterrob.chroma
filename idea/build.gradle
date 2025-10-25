@@ -23,9 +23,7 @@ dependencies {
 		exclude(group: "org.jetbrains.kotlinx", module: "kotlinx-coroutines-core")
 	}
 
-	testImplementation(libs.test.jupiter.api)
-	testImplementation(libs.test.jupiter.params)
-	testRuntimeOnly(libs.test.jupiter.engine)
+	testImplementation(libs.test.jupiter)
 	testRuntimeOnly(libs.test.jupiter.launcher)
 }
 
