@@ -1,7 +1,7 @@
 [versions]
 product = "0.1"
 idea = "2022.3.1"
-intellij = "2.11.0"
+intellij = "2.16.0"
 java = "17"
 kotlin = "2.3.21"
 ktor = "3.4.3"
