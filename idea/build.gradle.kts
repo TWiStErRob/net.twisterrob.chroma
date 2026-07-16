@@ -1,4 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel
 
 plugins {
@@ -17,10 +18,10 @@ dependencies {
 		// at io.ktor.client.HttpClientKt.HttpClient(HttpClient.kt:43)
 		// at io.ktor.client.HttpClientJvmKt.HttpClient(HttpClientJvm.kt:21)
 		// at net.twisterrob.chroma.razer.rest.ChromaRestClient.<init>(ChromaRestClient.kt:39)
-		exclude(group: "org.slf4j", module: "slf4j-api")
+		exclude(group = "org.slf4j", module = "slf4j-api")
 		// https://plugins.jetbrains.com/docs/intellij/using-kotlin.html#coroutinesLibraries
 		// > Plugins must always use the bundled library from the target IDE and not bundle their own version.
-		exclude(group: "org.jetbrains.kotlinx", module: "kotlinx-coroutines-core")
+		exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
 	}
 
 	testImplementation(libs.test.jupiter)
@@ -31,9 +32,8 @@ tasks.test {
 	useJUnitPlatform()
 }
 
-tasks.runIde {
-	def testProject = file("testProject") 
-	argumentProviders.add({ [ testProject.absolutePath ] } as CommandLineArgumentProvider)
+tasks.named<RunIdeTask>("runIde").configure {
+	argumentProviders.add { listOf(file("testProject").absolutePath) }
 }
 
 intellijPlatform {
