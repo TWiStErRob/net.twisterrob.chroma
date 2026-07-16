@@ -33,11 +33,8 @@ tasks.test {
 	useJUnitPlatform()
 }
 
-tasks.named<RunIdeTask>("runIde") {
-	val testProject = file("testProject")
-	argumentProviders.add(object : CommandLineArgumentProvider {
-		override fun asArguments() = listOf(testProject.absolutePath)
-	})
+tasks.named<RunIdeTask>("runIde").configure {
+	argumentProviders.add(CommandLineArgumentProvider { listOf(file("testProject").absolutePath) })
 }
 
 intellijPlatform {
