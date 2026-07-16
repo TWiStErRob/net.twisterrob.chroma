@@ -11,7 +11,7 @@ pluginManagement {
 plugins {
 	id("net.twisterrob.gradle.plugin.nagging") version "0.19"
 	id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-	id("org.jetbrains.intellij.platform.settings") version "2.11.0"
+	id("org.jetbrains.intellij.platform.settings") version "2.12.0"
 }
 
 dependencyResolutionManagement {
