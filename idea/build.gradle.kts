@@ -1,4 +1,3 @@
-import org.gradle.process.CommandLineArgumentProvider
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel
@@ -34,7 +33,7 @@ tasks.test {
 }
 
 tasks.named<RunIdeTask>("runIde").configure {
-	argumentProviders.add(CommandLineArgumentProvider { listOf(file("testProject").absolutePath) })
+	argumentProviders.add { listOf(file("testProject").absolutePath) }
 }
 
 intellijPlatform {
